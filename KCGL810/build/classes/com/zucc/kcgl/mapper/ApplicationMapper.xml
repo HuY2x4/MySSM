@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+
+<mapper namespace="com.zucc.kcgl.mapper.ApplicationMapper">
+	<resultMap type="com.zucc.kcgl.model.application" id="AplResultMap">
+		<id column="id" property="id"/>
+		<result column="method" property="method"/>
+		<result column="equid" property="equId"/>
+		<result column="equname" property="equName"/>
+		<result column="userid" property="userId"/>
+		<result column="applicant" property="applicant"/>
+		<result column="username" property="userName"/>
+		<result column="purpose" property="purpose"/>
+		<result column="returntime" property="returnTime"/>
+		<result column="phone" property="phone"/>
+		<result column="remark" property="remark"/>
+		<result column="state" property="state"/>
+		<result column="orderstate" property="orderState"/>
+		
+	</resultMap>
+	
+	<insert id="addApplication" parameterType="com.zucc.kcgl.model.application">
+		insert application(method,username,purpose,returntime,phone,remark,state,equid,equname,userid,applicant,orderstate) 
+		values(#{method},#{userName},#{purpose},#{returnTime},#{phone},#{remark},#{state},#{equId},#{equName},#{userId},#{applicant},'ok')
+	</insert>
+	
+	<select id="getAllBaseApl" parameterType="com.zucc.kcgl.model.application"  resultType="com.zucc.kcgl.model.application">
+		select * from application where method=#{method} and state=#{state}
+	</select>
+	
+	<select id="getApl" parameterType="int" resultType="com.zucc.kcgl.model.application">
+		select * from application where id=#{id}
+	</select>
+	
+	<select id="getOrderApl" parameterType="int" resultType="com.zucc.kcgl.model.application">
+		select * from application where method='order' and state='pass' and orderstate='ok' and equid=#{equId}
+	</select>
+	
+	<update id="updateApplication" parameterType="com.zucc.kcgl.model.application">
+		update application set state=#{state}
+		 where id=#{id}
+	</update>
+	
+	<update id="updateOrderState" parameterType="int">
+		update application set orderstate='no'
+		 where id=#{id}
+	</update>
+	
+	<select id="getAllAplByUser" parameterType="int" resultType="com.zucc.kcgl.model.application">
+		select * from application where userid=#{userId}
+	</select>
+	
+	<select id="getAplCount"  resultType="int">
+		select count(*) from application  
+	</select>
+	
+
+</mapper>

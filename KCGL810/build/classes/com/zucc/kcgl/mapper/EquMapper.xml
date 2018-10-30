@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+
+<mapper namespace="com.zucc.kcgl.mapper.EquMapper">
+	<resultMap type="com.zucc.kcgl.model.equipment" id="EquResultMap">
+		<id column="equid" property="equId"/>
+		<result column="name" property="name"/>
+		<result column="type" property="type"/>
+		<result column="version" property="version"/>
+		<result column="indata" property="inDate"/>
+		<result column="outdata" property="outDate"/>
+		<result column="price" property="price"/>
+		<result column="owner" property="owner"/>
+		<result column="chargePersion" property="chargePersion"/>
+		<result column="remark" property="remark"/>
+		<result column="state" property="state"/>
+		<result column="failurestate" property="failureState"/>
+		<result column="failurestateremark" property="failureStateRemark"/>
+	</resultMap>
+	
+	<insert id="addEqu" parameterType="com.zucc.kcgl.model.equipment">
+		insert equipment(name,type,version,indata,price,owner,chargePersion,remark,state,failurestate,failurestateremark) 
+		values(#{name},#{type},#{version},#{inDate},#{price},#{owner},#{chargePersion},#{remark},#{state},#{failureState},#{failureStateRemark})
+	</insert>
+	
+	<delete id="deleteEqu" parameterType="int">
+		DELETE FROM
+		equipment
+		where
+		equid=#{equId}
+	</delete>
+	
+	<select id="getEqu" parameterType="int" resultType="com.zucc.kcgl.model.equipment">
+		select * from equipment where equid=#{equId}
+	</select>
+	
+	<update id="updateEqu" parameterType="com.zucc.kcgl.model.equipment">
+		update equipment set name=#{name},type=#{type},version=#{version},
+		indata=#{inDate},outdata=#{outDate},price=#{price},owner=#{owner},
+		chargePersion=#{chargePersion},remark=#{remark},state=#{state},failurestate=#{failureState},failurestateremark=#{failureStateRemark} 
+		 where equid=#{equId}
+	</update>
+	
+	<update id="updateEquState" parameterType="com.zucc.kcgl.model.equipment">
+		update equipment set state=#{state} 
+		 where equid=#{equId}
+	</update>
+	
+	<update id="updateEquIndate" parameterType="com.zucc.kcgl.model.equipment">
+		update equipment set indata=#{inDate} 
+		 where equid=#{equId}
+	</update>
+	
+	<update id="updateEquOutdate" parameterType="com.zucc.kcgl.model.equipment">
+		update equipment set outdata=#{outDate} 
+		 where equid=#{equId}
+	</update>
+	
+	<select id="getAllEqu" resultType="com.zucc.kcgl.model.equipment">
+		select * from equipment 
+	</select>
+	
+	<select id="getAllEquSort" parameterType="com.zucc.kcgl.model.equipment" resultType="com.zucc.kcgl.model.equipment">
+		select * from equipment where type=#{type} and state=#{state}
+	</select>	
+	
+	<select id="getEquCount"  resultType="int">
+		select count(*) from equipment  
+	</select>
+
+</mapper>

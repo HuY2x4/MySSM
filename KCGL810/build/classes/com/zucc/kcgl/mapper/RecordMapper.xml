@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+
+<mapper namespace="com.zucc.kcgl.mapper.RecordMapper">
+	<resultMap type="com.zucc.kcgl.model.record" id="recordResultMap">
+		<id column="id" property="id"/>
+		<result column="equid" property="equId"/>
+		<result column="equname" property="equName"/>
+		<result column="state" property="state"/>
+		<result column="date" property="date"/>
+		<result column="userid" property="userId"/>
+		<result column="username" property="userName"/>
+		<result column="remark" property="remark"/>
+		<result column="admin" property="admin"/>
+		
+	</resultMap>
+	
+	<insert id="addRecord" parameterType="com.zucc.kcgl.model.record">
+		insert record(equid,equname,state,date,userid,username,remark,admin) 
+		values(#{equId},#{equName},#{state},#{date},#{userId},#{userName},#{remark},#{admin})
+	</insert>
+	
+	<update id="updateRecord" parameterType="com.zucc.kcgl.model.record">
+		update record set equid=#{equId},equname=#{equName},state=#{state},date=#{date},userid=#{userId},
+		username=#{userName},remark=#{remark},admin=#{admin}
+		 where id=#{id}
+	</update>
+	
+	<delete id="deleteRecord" parameterType="int">
+		DELETE FROM
+		record
+		where
+		id=#{id}
+	</delete>
+	
+	<select id="getRecordByEqu"  parameterType="int" resultType="com.zucc.kcgl.model.record">
+		select * from record where equid=#{equId}
+	</select>
+	
+	<select id="getRecordByUser" parameterType="int"  resultType="com.zucc.kcgl.model.record">
+		select * from record where userid=#{userId}
+	</select>
+	
+	<select id="getTime"  parameterType="com.zucc.kcgl.model.record" resultType="java.util.Date" >
+		select date from record where equid=#{equId} and state=#{state}
+	</select>
+	
+	
+
+</mapper>

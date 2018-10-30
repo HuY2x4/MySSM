@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+
+<mapper namespace="com.zucc.kcgl.mapper.UserMapper">
+	<resultMap type="com.zucc.kcgl.model.MdUser" id="UserResultMap">
+		<id column="userid" property="userId"/>
+		<result column="username" property="userName"/>
+		<result column="loginname" property="loginName"/>
+		<result column="password" property="password"/>
+		<result column="phone" property="phone"/>
+		<result column="email" property="email"/>
+		<result column="stuortea" property="stuOrTea"/>
+		<result column="usernum" property="userNum"/>
+		<result column="userfrom" property="userFrom"/>
+		<result column="points" property="points"/>
+	</resultMap>
+	
+	<insert id="saveUser" parameterType="com.zucc.kcgl.model.MdUser">
+		insert user(username,loginname,password,phone,points) 
+		values(#{userName},#{loginName},#{password},#{phone},#{points})
+	</insert>
+	
+	<delete id="deleteUser" parameterType="String">
+		DELETE FROM
+		user
+		where
+		loginname=#{loginname}
+	</delete>
+	
+	<select id="getUserInf" parameterType="String" resultType="com.zucc.kcgl.model.MdUser">
+		select * from user where loginname=#{loginname}
+	</select>
+	
+	<select id="getUserInfById" parameterType="int" resultType="com.zucc.kcgl.model.MdUser">
+		select * from user where userid=#{userId}
+	</select>
+	
+	<update id="updateUserInf" parameterType="com.zucc.kcgl.model.MdUser">
+		update user set username=#{userName},phone=#{phone},email=#{email},
+		stuortea=#{stuOrTea},usernum=#{userNum},userFrom=#{userFrom} where loginname=#{loginName}
+	</update>
+	
+	<update id="updateUserPassword" parameterType="String">
+		update user set password=#{password} where loginname=#{loginName}
+	</update>
+	
+	<select id="ifLoginNameRepeat" parameterType="String" resultType="String">
+		select loginname from user where loginname=#{loginname}
+	</select>	
+	
+	<select id="getUserCount"  resultType="int">
+		select count(*) from user  
+	</select>
+
+</mapper>
