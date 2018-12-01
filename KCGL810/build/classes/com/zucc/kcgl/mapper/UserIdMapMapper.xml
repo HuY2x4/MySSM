@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+
+<mapper namespace="com.zucc.kcgl.mapper.UserIdMapMapper">
+	
+	
+	<insert id="addUserIdMap" parameterType="String">
+		insert user_mapper(loginName) 
+		values(#{loginName})
+	</insert>
+	
+	<delete id="deleteUserIdMap" parameterType="String">
+		DELETE FROM user_mapper where
+		loginName=#{loginName}
+	</delete>
+	
+	<select id="getUserIdMap" parameterType="String" resultType="String">
+		select userId from user_mapper where loginName=#{loginName}
+	</select>
+	
+
+</mapper>

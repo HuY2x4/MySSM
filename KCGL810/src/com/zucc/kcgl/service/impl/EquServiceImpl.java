@@ -2,15 +2,16 @@ package com.zucc.kcgl.service.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 
 import com.zucc.kcgl.mapper.EquMapper;
-import com.zucc.kcgl.mapper.UserMapper;
-import com.zucc.kcgl.model.equipment;
+import com.zucc.kcgl.model.Equipment;
 import com.zucc.kcgl.service.EquService;
 
 @Service
@@ -19,10 +20,11 @@ public class EquServiceImpl implements EquService{
 	private EquMapper equMapper;
 	
 	@Override
-	public boolean addEqu(equipment equ) {
+	public boolean addEqu(Equipment equ) {
 		// TODO Auto-generated method stub
-		equMapper.addEqu(equ);
-		
+		if(equMapper.addEqu(equ)!=1){
+			return false;
+		};
 		
 		return true;
 	}
@@ -30,103 +32,90 @@ public class EquServiceImpl implements EquService{
 	@Override
 	public boolean deleteEqu(int id) {
 		// TODO Auto-generated method stub
-		equipment equ=new equipment();
-		equ=equMapper.getEqu(id);
-		if(equ==null){
+		
+		Equipment hasEqu=new Equipment();
+		hasEqu=equMapper.getEqu(id);
+		if(hasEqu==null){
 			return false;
 		}
-		
+		/*还要加上查询相关的记录是否有id
+		 * 如有，报错
+		 * 
+		 * */
 		equMapper.deleteEqu(id);
 		return true;
 	}
 
 	@Override
-	public boolean updateEqu(equipment equ) {
+	public boolean updateEqu(Equipment equ) {
 		// TODO Auto-generated method stub
-		equipment ifequ=new equipment();
-		ifequ=equMapper.getEqu(equ.getEquid());
-		if(ifequ==null){
+		Equipment hasEqu=new Equipment();
+		hasEqu=equMapper.getEqu(equ.getEquId());
+		if(hasEqu==null){
 			return false;
 		}
 		
+
 		equMapper.updateEqu(equ);
 		
 		return true;
 	}
 
 	@Override
-	public equipment getEqu(int id) {
+	public Equipment getEqu(int id) {
 		// TODO Auto-generated method stub
-		equipment equ=new equipment();
+		Equipment equ=new Equipment();
+		System.out.println("service:"+id);
 		equ=equMapper.getEqu(id);
-		
+		if(equ==null){
+			System.out.println("service空的");
+		}
 		
 		return equ;
 	}
 
 	@Override
-	public List<equipment> getAllEqu(int page,int num) {
+	public List<Equipment> getAllEqu() {
 		// TODO Auto-generated method stub
-		List<equipment> list=new ArrayList<equipment>();
+		List<Equipment> list=new ArrayList<Equipment>();
 		list=equMapper.getAllEqu();
-		List<equipment> listNew=new ArrayList<equipment>();
-		for(int i=0;i<num;i++){
-			listNew.add(list.get((page-1)*num+i));
-		}
 		
-		return listNew;
+		return list;
 	}
 
-	@Override
-	public List<equipment> getAllEquSort(int page,int num,String type, String state) {
-		// TODO Auto-generated method stub
-		equipment equ=new equipment();
-		equ.setType(type);
-		equ.setState(state);
-		List<equipment> list=new ArrayList<equipment>();
-		list=equMapper.getAllEquSort(equ);
-		List<equipment> listNew=new ArrayList<equipment>();
-		for(int i=0;i<num;i++){
-			listNew.add(list.get((page-1)*num+i));
-		}
-		return listNew;
-	}
+
 
 	@Override
 	public boolean updateEquState(int equId, String state) {
 		// TODO Auto-generated method stub
-		equipment ifequ=new equipment();
-		ifequ=equMapper.getEqu(equId);
-		if(ifequ==null){
+		Equipment hasEqu=new Equipment();
+		hasEqu=equMapper.getEqu(equId);
+		if(hasEqu==null){
 			return false;
 		}
-		
-		
-		equipment equ=new equipment();
-		equ.setEquId(equId);
-		equ.setState(state);
-		equMapper.updateEquState(equ);
+		hasEqu.setEquId(equId);
+		hasEqu.setState(state);
+		System.out.println(hasEqu.toString());
+		equMapper.updateEqu(hasEqu);
 		return true;
 	}
 
 	@Override
-	public boolean updateEqutime(Date date, int equId, String state) {
+	public boolean updateEquTime(Date date, int equId, String state) {
 		// TODO Auto-generated method stub
-		equipment ifequ=new equipment();
-		ifequ=equMapper.getEqu(equId);
-		if(ifequ==null){
+		Equipment hasEqu=new Equipment();
+		hasEqu=equMapper.getEqu(equId);
+		if(hasEqu==null){
 			return false;
 		}
-		
-		equipment equ=new equipment();
-		equ.setEquid(equId);
+
 		if(state.equals("in")){
-			equ.setInDate(date);
-			equMapper.updateEquIndate(equ);
+			hasEqu.setInDate(date);
+			equMapper.updateEqu(hasEqu);
 		}
 		else if(state.equals("out")){
-			equ.setOutDate(date);
-			equMapper.updateEquOutdate(equ);
+			hasEqu.setOutDate(date);
+			equMapper.updateEqu(hasEqu);
 		}
 		
 		return true;
@@ -136,6 +125,29 @@ public class EquServiceImpl implements EquService{
 	public int getEquCount() {
 		// TODO Auto-generated method stub
 		return equMapper.getEquCount();
+	}
+
+
+
+	@Override
+	public List<Equipment> getPageEquSort(int currentPage, int pageSize,
+			String type, String state,String equName) {
+		// TODO Auto-generated method stub
+		Map<String,Object> map=new HashMap<String,Object>();
+		map.put("startPage", (currentPage-1)*pageSize);
+		map.put("pageSize", pageSize);
+		if(!(type==null)){
+			map.put("type", type);
+		}
+		if(!(state==null)){
+			map.put("state", state);
+		}
+		if(!(equName==null)){
+			map.put("equName", equName);
+		}
+		List<Equipment> list=new ArrayList<Equipment>();
+		list=equMapper.getPageEquSort(map);
+		return list;
 	}
 
 }

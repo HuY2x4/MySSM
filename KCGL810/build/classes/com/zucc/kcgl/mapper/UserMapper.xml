@@ -5,51 +5,78 @@
         
 
 <mapper namespace="com.zucc.kcgl.mapper.UserMapper">
-	<resultMap type="com.zucc.kcgl.model.MdUser" id="UserResultMap">
-		<id column="userid" property="userId"/>
-		<result column="username" property="userName"/>
-		<result column="loginname" property="loginName"/>
-		<result column="password" property="password"/>
-		<result column="phone" property="phone"/>
-		<result column="email" property="email"/>
-		<result column="stuortea" property="stuOrTea"/>
-		<result column="usernum" property="userNum"/>
-		<result column="userfrom" property="userFrom"/>
-		<result column="points" property="points"/>
-	</resultMap>
 	
-	<insert id="saveUser" parameterType="com.zucc.kcgl.model.MdUser">
-		insert user(username,loginname,password,phone,points) 
-		values(#{userName},#{loginName},#{password},#{phone},#{points})
+	
+	<insert id="addUser" parameterType="com.zucc.kcgl.model.User">
+		insert user(loginName,password,userName,phone,email,userSchoolId,points) 
+		values(#{loginName},#{password},#{userName},#{phone},#{email},#{userSchoolId},'100')
 	</insert>
 	
+	
+	
 	<delete id="deleteUser" parameterType="String">
-		DELETE FROM
-		user
-		where
-		loginname=#{loginname}
+		DELETE FROM user where
+		loginName=#{loginName}
 	</delete>
 	
-	<select id="getUserInf" parameterType="String" resultType="com.zucc.kcgl.model.MdUser">
-		select * from user where loginname=#{loginname}
+	
+	
+	
+	<select id="getUserInfByloginName" parameterType="String" resultType="com.zucc.kcgl.model.User">
+		select * from user where loginName=#{loginName}
 	</select>
 	
-	<select id="getUserInfById" parameterType="int" resultType="com.zucc.kcgl.model.MdUser">
-		select * from user where userid=#{userId}
-	</select>
 	
-	<update id="updateUserInf" parameterType="com.zucc.kcgl.model.MdUser">
-		update user set username=#{userName},phone=#{phone},email=#{email},
-		stuortea=#{stuOrTea},usernum=#{userNum},userFrom=#{userFrom} where loginname=#{loginName}
+	
+	
+	<select id="getUserAllInf" parameterType="String"  resultMap="userAllInf" >
+		select um.userId,u.loginName,u.userName,u.password,u.email,u.phone,u.points,u.userSchoolId,usi.stuOrTea,usi.userFrom 
+		from user u,user_mapper um,user_school_inf usi 
+		where u.loginName=um.loginName and u.userSchoolId=usi.userSchoolId and u.loginName=#{loginName}
+		
+	</select>
+	<resultMap type="User" id="userAllInf">
+		<result column="loginName" property="loginName"/>
+		<result column="password" property="password"/>
+		<result column="userName" property="userName"/>
+		<result column="phone" property="phone"/>
+		<result column="email" property="email"/>
+		<result column="userSchoolId" property="userSchoolId"/>
+		<result column="points" property="points"/>
+		<association property="userMapper" javaType="com.zucc.kcgl.model.UserIdMap">
+			<result column="loginName" property="loginName"/>
+			<result column="userId" property="userId"/>
+		</association>
+		<association property="userSchoolInf" javaType="com.zucc.kcgl.model.UserSchoolInf">
+			<result column="userSchoolId" property="userSchoolId"/>
+			<result column="stuOrTea" property="stuOrTea"/>
+			<result column="userFrom" property="userFrom"/>
+		</association>
+	</resultMap>
+	
+	
+	
+	
+	<update id="updateUserInf" parameterType="com.zucc.kcgl.model.User">
+		update user set phone=#{phone},email=#{email},userSchoolId=#{userSchoolId}
+		 where loginName=#{loginName}
 	</update>
+	
+	
+	
 	
 	<update id="updateUserPassword" parameterType="String">
-		update user set password=#{password} where loginname=#{loginName}
+		update user set password=#{password} where loginName=#{loginName}
 	</update>
 	
-	<select id="ifLoginNameRepeat" parameterType="String" resultType="String">
-		select loginname from user where loginname=#{loginname}
+	
+	
+	
+	<select id="hasLoginNameRepeat" parameterType="String" resultType="String">
+		select loginName from user where loginName=#{loginName}
 	</select>	
+	
+	
 	
 	<select id="getUserCount"  resultType="int">
 		select count(*) from user  

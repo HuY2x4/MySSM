@@ -256,6 +256,44 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
                 }
             });
         }
+        
+        function test8() {
+        	var name=$("#username").val()
+        	var bao = {
+                    
+                    "name" : "电脑",
+                    "type" : "电子产品",
+                    "version" : "666",
+                    "price" : "6666",
+                    "owner" : "hyx",
+                    "chargePerson" : "hyx",
+                    "remark" : "无",
+                    "state" : "in",
+                    "imagePath" : $("#image"),
+                   
+                };
+     
+            $.ajax({
+            //几个参数需要注意一下
+           	    data: bao,
+                type: "POST",//方法类型
+                dataType: "text",//预期服务器返回的数据类型    //有text 和json两种类型，一个是从后端返回String类型  一个是从后端返回json类型
+                url: "<%=basePath%>addEqu" , 
+                contentType:"application/x-www-form-urlencoded; charset=utf-8",
+                success: function (result) {   //result就是返回的String或json
+                	alert("同意申请");
+                	
+                    if (true) {
+                       // alert(result.userName);
+                           //就是访问这个main下面的这个函数 
+                    }
+                    ;
+                },
+                error : function() {
+                    alert("还是错的");
+                }
+            });
+        }
     </script>
 </head>
 <body>
@@ -265,6 +303,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
         <p>用户名：<input name="loginName" type="text" id="loginname" tabindex="1" size="15" value=""/></p>
         <p>密　码：<input name="password" type="password" id="textbox2" tabindex="2" size="16" value=""/></p>
         <p>手机号：<input name="phone" type="text" id="phone" tabindex="1" size="15" value=""/></p>
+        <input name="img" type="file" id="image">
         <p><input type="button" value="登录" onclick="login()">&nbsp;<input type="submit" value="页面跳转"></p>
         <p><input type="button" value="添加申请" onclick="test2()"></p>
         <p><input type="button" value="同意" onclick="test3()"></p>
@@ -272,6 +311,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
         <p><input type="button" value="预约" onclick="test4()"></p>
         <p><input type="button" value="同意预约" onclick="test7()"></p>
          <p><input type="button" value="入库" onclick="test5()"></p>
+          <p><input type="button" value="添加设备" onclick="test8()"></p>
     </form>
 </div>
 </body>

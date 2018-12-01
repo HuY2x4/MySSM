@@ -1,21 +1,23 @@
 package com.zucc.kcgl.service;
 
-import java.util.Date;
 import java.util.List;
 
-import com.zucc.kcgl.model.record;
+import com.zucc.kcgl.model.EquRecord;
 
 public interface RecordService {
 
-	public boolean addRecord(record record);
+	public boolean addRecord(EquRecord record);
 	
-	public boolean updateRecord(record record);
+	public boolean updateRecord(EquRecord record);
 	
-	public boolean deleteRecord(int id);
+	public boolean deleteRecord(int recordId);
 	
-	public List<record> getRecordByEqu(int equid);
+	public EquRecord getRecord(int recordId);
+
 	
-	public List<record> getRecordByUser(int userid);
+	public List<EquRecord> getRecordByEqu(int equId);
 	
-	public Date getTime(int equId,String state);
+	public List<EquRecord> getRecordByUser(String loginName);
+	
+//	public Date getTime(int equId,String state);
 }

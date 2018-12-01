@@ -1,29 +1,24 @@
 package com.zucc.kcgl.mapper;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-import com.zucc.kcgl.model.equipment;
+import com.zucc.kcgl.model.Equipment;
+
 
 public interface EquMapper {
 
-	void addEqu(equipment equ);
+	int addEqu(Equipment equ);
 	
-	void deleteEqu(int id);
+	int deleteEqu(int equId);
 	
-	void updateEqu(equipment equ);
+	int updateEqu(Equipment equ);
 	
-	void updateEquState(equipment equ);
+	Equipment getEqu(int equId);
 	
-	void updateEquIndate(equipment equ);
+	List<Equipment> getAllEqu();
 	
-	void updateEquOutdate(equipment equ);
-	
-	equipment getEqu(int id);
-	
-	List<equipment> getAllEqu();
-	
-	List<equipment> getAllEquSort(equipment equ);
+	List<Equipment> getPageEquSort(Map<String,Object> map);
 	
 	int getEquCount();
 }

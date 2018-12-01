@@ -5,57 +5,56 @@
         
 
 <mapper namespace="com.zucc.kcgl.mapper.ApplicationMapper">
-	<resultMap type="com.zucc.kcgl.model.application" id="AplResultMap">
-		<id column="id" property="id"/>
-		<result column="method" property="method"/>
-		<result column="equid" property="equId"/>
-		<result column="equname" property="equName"/>
-		<result column="userid" property="userId"/>
-		<result column="applicant" property="applicant"/>
-		<result column="username" property="userName"/>
-		<result column="purpose" property="purpose"/>
-		<result column="returntime" property="returnTime"/>
-		<result column="phone" property="phone"/>
-		<result column="remark" property="remark"/>
-		<result column="state" property="state"/>
-		<result column="orderstate" property="orderState"/>
-		
-	</resultMap>
 	
-	<insert id="addApplication" parameterType="com.zucc.kcgl.model.application">
-		insert application(method,username,purpose,returntime,phone,remark,state,equid,equname,userid,applicant,orderstate) 
-		values(#{method},#{userName},#{purpose},#{returnTime},#{phone},#{remark},#{state},#{equId},#{equName},#{userId},#{applicant},'ok')
+	
+	<insert id="addApl" parameterType="com.zucc.kcgl.model.Application">
+		insert application(method,loginName,equId,purpose,returnTime,phone,remark,state,orderState) 
+		values(#{method},#{loginName},#{equId},#{purpose},#{returnTime},#{phone},#{remark},#{state},'valid')
 	</insert>
 	
-	<select id="getAllBaseApl" parameterType="com.zucc.kcgl.model.application"  resultType="com.zucc.kcgl.model.application">
-		select * from application where method=#{method} and state=#{state}
+	
+	<select id="getApl" parameterType="int" resultType="com.zucc.kcgl.model.Application">
+		select * from application where aplId=#{aplId}
 	</select>
 	
-	<select id="getApl" parameterType="int" resultType="com.zucc.kcgl.model.application">
-		select * from application where id=#{id}
-	</select>
-	
-	<select id="getOrderApl" parameterType="int" resultType="com.zucc.kcgl.model.application">
-		select * from application where method='order' and state='pass' and orderstate='ok' and equid=#{equId}
-	</select>
-	
-	<update id="updateApplication" parameterType="com.zucc.kcgl.model.application">
-		update application set state=#{state}
-		 where id=#{id}
+	<update id="updateApl" parameterType="com.zucc.kcgl.model.Application">
+		update application  set method=#{method},loginName=#{loginName},equId=#{equId},
+		purpose=#{purpose},returnTime=#{returnTime},phone=#{phone},remark=#{remark},
+		state=#{state},orderState=#{orderState}
+		 where aplId=#{aplId}
 	</update>
 	
-	<update id="updateOrderState" parameterType="int">
-		update application set orderstate='no'
-		 where id=#{id}
-	</update>
-	
-	<select id="getAllAplByUser" parameterType="int" resultType="com.zucc.kcgl.model.application">
-		select * from application where userid=#{userId}
+	<select id="getAplBySort" parameterType="Map"  resultType="com.zucc.kcgl.model.Application">
+		select * from application 
+		<where>
+			<if test="method!=null">
+				method like #{method}
+			</if>
+			<if test="loginName!=null">
+				and loginName like #{loginName}
+			</if>
+			<if test="equId!=null">
+				and equId like #{equId}
+			</if>
+			<if test="state!=null">
+				and state like #{state}
+			</if>
+		</where>
+		limit #{startPage},#{pageSize}
 	</select>
+	
 	
 	<select id="getAplCount"  resultType="int">
 		select count(*) from application  
 	</select>
+	
+	<select id="getOrderApl" parameterType="int" resultType="com.zucc.kcgl.model.Application">
+		select * from application where method='order' and state='pass' and orderstate='valid' and equid=#{equId}
+	</select>  
+
+
+	
+	
 	
 
 </mapper>

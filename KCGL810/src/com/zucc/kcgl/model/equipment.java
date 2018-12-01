@@ -1,50 +1,35 @@
 package com.zucc.kcgl.model;
 
 import java.util.Date;
+import java.util.List;
 
-public class equipment {
-	private int equId;			//设备id
-	private String name;	
-	private String type;		//设备种类
-	private String version;		//设备型号
-	private Date inDate;		//最近一次入库时间
-	private Date outDate;		//最近一次出库时间
-	private int price;			//价格
-	private String owner;		//拥有者
-	private String chargePersion;//负责人
-	private String remark;		//备注
-	private String state;		//状态  
-	private String failureState;//维修状态
-	private String failureStateRemark;//故障备注
+public class Equipment {
+	private int equId;
+	private String equName;
+	private String type;
+	private String version;
+	private Date inDate;
+	private Date outDate;
+	private int price;
+	private String owner;
+	private String manager;
+	private String remark;
+	private String state;
+	private String img;
+	private List<Application> listApplication;
+	private List<EquRecord> listEquRecorf;
+	private List<SucApplication> listSucApplication;
 	public int getEquId() {
 		return equId;
 	}
 	public void setEquId(int equId) {
 		this.equId = equId;
 	}
-	public Date getInDate() {
-		return inDate;
+	public String getEquName() {
+		return equName;
 	}
-	public void setInDate(Date inDate) {
-		this.inDate = inDate;
-	}
-	public Date getOutDate() {
-		return outDate;
-	}
-	public void setOutDate(Date outDate) {
-		this.outDate = outDate;
-	}
-	public int getEquid() {
-		return equId;
-	}
-	public void setEquid(int id) {
-		this.equId = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
+	public void setEquName(String equName) {
+		this.equName = equName;
 	}
 	public String getType() {
 		return type;
@@ -58,17 +43,17 @@ public class equipment {
 	public void setVersion(String version) {
 		this.version = version;
 	}
-	public Date getIndata() {
+	public Date getInDate() {
 		return inDate;
 	}
-	public void setIndata(Date indata) {
-		this.inDate = indata;
+	public void setInDate(Date inDate) {
+		this.inDate = inDate;
 	}
-	public Date getOutdata() {
+	public Date getOutDate() {
 		return outDate;
 	}
-	public void setOutdata(Date outdata) {
-		this.outDate = outdata;
+	public void setOutDate(Date outDate) {
+		this.outDate = outDate;
 	}
 	public int getPrice() {
 		return price;
@@ -82,11 +67,11 @@ public class equipment {
 	public void setOwner(String owner) {
 		this.owner = owner;
 	}
-	public String getChargePersion() {
-		return chargePersion;
+	public String getManager() {
+		return manager;
 	}
-	public void setChargePersion(String chargePersion) {
-		this.chargePersion = chargePersion;
+	public void setManager(String manager) {
+		this.manager = manager;
 	}
 	public String getRemark() {
 		return remark;
@@ -100,17 +85,40 @@ public class equipment {
 	public void setState(String state) {
 		this.state = state;
 	}
-	public String getFailureState() {
-		return failureState;
+	public String getImg() {
+		return img;
 	}
-	public void setFailureState(String failureState) {
-		this.failureState = failureState;
+	public void setImg(String img) {
+		this.img = img;
 	}
-	public String getFailureStateReamrk() {
-		return failureStateRemark;
+	public List<Application> getListApplication() {
+		return listApplication;
 	}
-	public void setFailureStateReamrk(String failureStateReamrk) {
-		this.failureStateRemark = failureStateReamrk;
+	public void setListApplication(List<Application> listApplication) {
+		this.listApplication = listApplication;
 	}
-
+	public List<EquRecord> getListEquRecorf() {
+		return listEquRecorf;
+	}
+	public void setListEquRecorf(List<EquRecord> listEquRecorf) {
+		this.listEquRecorf = listEquRecorf;
+	}
+	public List<SucApplication> getListSucApplication() {
+		return listSucApplication;
+	}
+	public void setListSucApplication(List<SucApplication> listSucApplication) {
+		this.listSucApplication = listSucApplication;
+	}
+	@Override
+	public String toString() {
+		return "Equipment [equId=" + equId + ", equName=" + equName + ", type="
+				+ type + ", version=" + version + ", inDate=" + inDate
+				+ ", outDate=" + outDate + ", price=" + price + ", owner="
+				+ owner + ", manager=" + manager + ", remark=" + remark
+				+ ", state=" + state + ", img=" + img + ", listApplication="
+				+ listApplication + ", listEquRecorf=" + listEquRecorf
+				+ ", listSucApplication=" + listSucApplication + "]";
+	}
+	
+	
 }

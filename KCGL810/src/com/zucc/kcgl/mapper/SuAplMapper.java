@@ -1,18 +1,23 @@
 package com.zucc.kcgl.mapper;
 
 import java.util.List;
+import java.util.Map;
 
-import com.zucc.kcgl.model.sucApplication;
+import com.zucc.kcgl.model.SucApplication;
 
 public interface SuAplMapper {
 
-	void addSuApl(sucApplication suapl);
+	int addSuApl(SucApplication suApl);
 	
-	void updateSuApl(sucApplication suapl);
+	int updateSuAplByCode(Map<String,Object> map);
 	
-	sucApplication getSuApl(int code);
+	int updateSuAplToDie(int sucAplId);
 	
-	sucApplication getOutSuApl(int code);
+	SucApplication getSuApl(String code);
 	
-	List<sucApplication> getAllSuAplByUser(int userId);
+	SucApplication getSuAplByEquAndIn(int equId);
+	
+//	SucApplication getOutSuApl(String code);
+	
+	List<SucApplication> getAllSuAplByUser(String loginName);
 }

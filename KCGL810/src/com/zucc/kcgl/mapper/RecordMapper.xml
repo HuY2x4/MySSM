@@ -5,47 +5,80 @@
         
 
 <mapper namespace="com.zucc.kcgl.mapper.RecordMapper">
-	<resultMap type="com.zucc.kcgl.model.record" id="recordResultMap">
-		<id column="id" property="id"/>
-		<result column="equid" property="equId"/>
-		<result column="equname" property="equName"/>
-		<result column="state" property="state"/>
-		<result column="date" property="date"/>
-		<result column="userid" property="userId"/>
-		<result column="username" property="userName"/>
-		<result column="remark" property="remark"/>
-		<result column="admin" property="admin"/>
-		
-	</resultMap>
+
 	
-	<insert id="addRecord" parameterType="com.zucc.kcgl.model.record">
-		insert record(equid,equname,state,date,userid,username,remark,admin) 
-		values(#{equId},#{equName},#{state},#{date},#{userId},#{userName},#{remark},#{admin})
+	<insert id="addRecord" parameterType="com.zucc.kcgl.model.EquRecord">
+		insert equrecord(state,date,remark,equId,loginName,registrar) 
+		values(#{state},#{date},#{remark},#{equId},#{loginName},#{registrar})
 	</insert>
 	
-	<update id="updateRecord" parameterType="com.zucc.kcgl.model.record">
-		update record set equid=#{equId},equname=#{equName},state=#{state},date=#{date},userid=#{userId},
-		username=#{userName},remark=#{remark},admin=#{admin}
-		 where id=#{id}
+	<update id="updateRecord" parameterType="com.zucc.kcgl.model.EquRecord">
+		update equrecord set state=#{state},date=#{date},remark=#{remark},
+		equId=#{equId},loginName=#{loginName},registrar=#{registrar} 
+		 where recordId=#{recordId}
 	</update>
 	
 	<delete id="deleteRecord" parameterType="int">
-		DELETE FROM
-		record
-		where
-		id=#{id}
+		delete from equrecord
+		where recordId=#{recordId}
 	</delete>
 	
-	<select id="getRecordByEqu"  parameterType="int" resultType="com.zucc.kcgl.model.record">
-		select * from record where equid=#{equId}
+	<select id="getRecord"  parameterType="int" resultType="com.zucc.kcgl.model.EquRecord">
+		select * from equrecord where recordId=#{recordId}
 	</select>
 	
-	<select id="getRecordByUser" parameterType="int"  resultType="com.zucc.kcgl.model.record">
-		select * from record where userid=#{userId}
+	<select id="getRecordByEqu"  parameterType="int" resultMap="recordInfByEqu">
+		select r.recordId,r.state,r.date,r.remark,r.equId,r.loginName,r.registrar,
+		u.userName,e.equName,e.version 
+		from equrecord r,user u,equipment e 	
+		where r.equId=e.equId and u.loginName=r.loginName and r.equid=#{equId}
 	</select>
+	<resultMap type="com.zucc.kcgl.model.EquRecord" id="recordInfByEqu">
+		<result column="recordId" property="recordId"/>
+		<result column="state" property="state"/>
+		<result column="date" property="date"/>
+		<result column="remark" property="remark"/>
+		<result column="equId" property="equId"/>
+		<result column="loginName" property="loginName"/>
+		<result column="registrar" property="registrar"/>
+		<association property="equipment" javaType="com.zucc.kcgl.model.Equipment">
+			<result column="equId" property="equId"/>
+			<result column="equName" property="equName"/>
+			<result column="version" property="version"/>
+		</association>
+		<association property="user" javaType="com.zucc.kcgl.model.User">
+			<result column="loginName" property="loginName"/>
+			<result column="userName" property="userName"/>
+		</association>
+	</resultMap>
 	
-	<select id="getTime"  parameterType="com.zucc.kcgl.model.record" resultType="java.util.Date" >
-		select date from record where equid=#{equId} and state=#{state}
+	<select id="getRecordByUser" parameterType="String"  resultMap="recordInfByUser">
+		select r.recordId,r.state,r.date,r.remark,r.equId,r.loginName,r.registrar,
+		u.userName,e.equName,e.version 
+		from equrecord r,user u,equipment e 
+		where r.equId=e.equId and u.loginName=r.loginName and r.loginName=#{loginName}
+	</select>
+	<resultMap type="com.zucc.kcgl.model.EquRecord" id="recordInfByUser">
+		<result column="recordId" property="recordId"/>
+		<result column="state" property="state"/>
+		<result column="date" property="date"/>
+		<result column="remark" property="remark"/>
+		<result column="equId" property="equId"/>
+		<result column="loginName" property="loginName"/>
+		<result column="registrar" property="registrar"/>
+		<association property="equipment" javaType="com.zucc.kcgl.model.Equipment">
+			<result column="equId" property="equId"/>
+			<result column="equName" property="equName"/>
+			<result column="version" property="version"/>
+		</association>
+		<association property="user" javaType="com.zucc.kcgl.model.User">
+			<result column="loginName" property="loginName"/>
+			<result column="userName" property="userName"/>
+		</association>
+	</resultMap>
+	
+	<select id="getTime"  parameterType="Map" resultType="java.util.Date" >
+		select date from equrecord where equid=#{equId} and state=#{state}
 	</select>
 	
 	

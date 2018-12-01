@@ -2,23 +2,19 @@ package com.zucc.kcgl.service;
 
 import java.util.List;
 
-import com.zucc.kcgl.model.application;
+import com.zucc.kcgl.model.Application;
 
 public interface AplService {
 
-	public boolean addApplication(application apl);
+	public boolean addApl(Application apl);
 	
-	public List<application> getAllBaseApl(String method,String state,int page,int num);
+	public List<Application> getAplBySort(String method,String loginName,int equId,String state,int currentPage,int pageSize);
 	
-	public application getApl(int id);
+	public Application getApl(int aplId);
 	
-	public application getOrderApl(int equId);
+	public Application getOrderApl(int equId);
 	
-	public boolean updateApplication(int id ,String state);
-	
-	public void updateOrderState(int id);
-	
-	public List<application> getAllAplByUser(int userId);
-	
+	public boolean updateApl(Application apl);
+		
 	public int getAplCount();
 }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+
+<mapper namespace="com.zucc.kcgl.mapper.UserSchoolInfMapper">
+	
+	
+	<insert id="addUserSchoolInf" parameterType="com.zucc.kcgl.model.UserSchoolInf">
+		insert user_school_inf(userSchoolId,stuOrTea,userFrom) 
+		values(#{userSchoolId},#{stuOrTea},#{userFrom})
+	</insert>
+	
+	
+	<select id="getUserSchoolInf" parameterType="String" resultType="com.zucc.kcgl.model.UserSchoolInf">
+		select * from user_school_inf where userSchoolId=#{userSchoolId}
+	</select>
+	
+	<select id="hasUserSchoolInf" parameterType="String" resultType="String">
+		select userSchoolId from user_school_inf where userSchoolId=#{userSchoolId}
+	</select>
+
+</mapper>

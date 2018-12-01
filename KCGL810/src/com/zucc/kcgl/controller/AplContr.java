@@ -17,20 +17,16 @@ import javax.servlet.http.HttpSession;
 import net.sf.json.JSONObject;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.zucc.kcgl.model.MdUser;
-import com.zucc.kcgl.model.application;
-import com.zucc.kcgl.model.equipment;
-import com.zucc.kcgl.model.record;
-import com.zucc.kcgl.model.sucApplication;
+import com.zucc.kcgl.model.Application;
+import com.zucc.kcgl.model.User;
 import com.zucc.kcgl.service.AplService;
-import com.zucc.kcgl.service.EquService;
-import com.zucc.kcgl.service.RecordService;
-import com.zucc.kcgl.service.SuAplService;
 import com.zucc.kcgl.service.UserService;
+import com.zucc.kcgl.util.UtilsC;
 
 
 @Controller
@@ -39,117 +35,236 @@ public class AplContr {
 	@Resource
 	private AplService aplService;
 	@Resource
-	private RecordService recService;
-	@Resource
 	private UserService userService;
-	@Resource
-	private EquService equService;
-	@Resource
-	private SuAplService suAplService;
+
 	
-	@RequestMapping("/applicationList")
-	public String applicationList(){  
-		return "application/applicationList";
+	@RequestMapping("/ApplicationList")
+	public String ApplicationList(){  
+		return "Application/ApplicationList";
 	}
 	
-	@RequestMapping("/applicationMain")
-	public String applicationMain(){  
-		return "application/applicationMain";
+	@RequestMapping("/ApplicationMain")
+	public String ApplicationMain(){  
+		return "Application/ApplicationMain";
 	}
 	
-	@RequestMapping("/applicationPassList")
-	public String applicationPassList(){  
-		return "application/applicationPassList";
+	@RequestMapping("/ApplicationPassList")
+	public String ApplicationPassList(){  
+		return "Application/ApplicationPassList";
 	}
 	
-	@RequestMapping("/applicationSubmit")
-	public String applicationSubmit(){  
-		return "application/applicationSubmit";
+	@RequestMapping("/ApplicationSubmit")
+	public String ApplicationSubmit(){  
+		return "Application/ApplicationSubmit";
 	}
 	
-	@RequestMapping(value = "/addApl", method = RequestMethod.POST)//…Í«Î»À–’√˚∫Õid  …Í«ÎŒÔ   ±º‰
-	public  @ResponseBody  String addApl(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
+	//String method,String equId,String purpose,String returnTime,String phone,String remark
+	@RequestMapping(value = "/addApl", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String addApl(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
 		HttpSession session = request.getSession(false);
-		if(session.getAttribute("userName")==null){
-			return "loginError";
-		}
-		application apl=new application();
-		
-		Date date = new Date();//ªÒµ√œµÕ≥ ±º‰.
-        SimpleDateFormat sdf =   new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss" );
-        Date time = sdf.parse( request.getParameter("returnTime") );
-
-		apl.setMethod(request.getParameter("method"));
-		apl.setPhone(request.getParameter("phone"));
-		apl.setPurpose(request.getParameter("purpose"));
-		apl.setRemark(request.getParameter("remark"));
-		apl.setReturnTime(time);
-
-		apl.setUserName(request.getParameter("userName"));
-		apl.setState("stay");   //stay pass  fail
-		apl.setApplicant((String)session.getAttribute("userName"));
-		apl.setUserId(Integer.parseInt((String)session.getAttribute("userId")));
-		apl.setEquId(Integer.parseInt(request.getParameter("equId")));
-
-		
-		equipment equ=new equipment();
-		equ=equService.getEqu(Integer.parseInt(request.getParameter("equId")));
-		
-		apl.setEquName(equ.getName());
-		if(aplService.addApplication(apl)){
-			return "ok";
-		}
-		else{
-			return "no";
-		}
-		
-		
-	}
-	
-	
-	
-	@RequestMapping(value = "/getAllAplBaseInf", method = RequestMethod.POST)
-	public  @ResponseBody  String getAllBaseApl(HttpServletRequest request, HttpServletResponse response,String method,String state,int page,int num) throws IOException{
-		HashMap<Object,Object> map = new HashMap<>();  
-		List<application> list=new ArrayList<application>();
-		list=aplService.getAllBaseApl(method,state, page, num);
-		map.put("data", list);
-		map.put("state", "ok");
-		String json = JSONObject.fromObject(map).toString();
-		response.setCharacterEncoding("UTF-8");
-		response.flushBuffer();
-		response.getWriter().write(json);
-		response.getWriter().flush();  
-		response.getWriter().close();
-		return null;
-		
-	}
-	
-	@RequestMapping(value = "/getApl", method = RequestMethod.POST)//json
-	public  @ResponseBody  String getApl(HttpServletRequest request, HttpServletResponse response,int  id) throws IOException{
 		Map<Object,Object> map = new HashMap<>();  
-	
-		application apl=new application();
-		
-		apl=aplService.getApl(id);
-		
-		if(apl!=null){
-			map.put("id", apl.getId());
-			map.put("userName", apl.getUserName());
-			map.put("method", apl.getMethod());
-			map.put("purpose", apl.getPurpose());
-			map.put("remark", apl.getRemark());///////ø’µƒ’‚¿Ô
-			map.put("returnTime", apl.getReturnTime());
-			map.put("state", apl.getState());
-			map.put("phone", apl.getPhone());
-			map.put("flag", "ok");
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String method=UtilsC.hasKeyOfMap("method", jsonObject);
+		String phone=UtilsC.hasKeyOfMap("phone", jsonObject);
+		String purpose=UtilsC.hasKeyOfMap("purpose", jsonObject);
+		String remark=UtilsC.hasKeyOfMap("remark", jsonObject);
+		String returnTime=UtilsC.hasKeyOfMap("returnTime", jsonObject);
+		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
+
+		if(method==null||phone==null||purpose==null||remark==null||returnTime==null||equId==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "‰º†ÂÖ•ÁöÑ‰ø°ÊÅØ‰∏∫Á©∫");
+		}
+		else if(session.getAttribute("loginName")==null){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "Ë∫´‰ªΩËøáÊúü");
 		}
 		else{
-			map.put("flag", "no");
+			Application apl=new Application();
+			apl.setMethod(method);
+			apl.setPhone(phone);
+			apl.setPurpose(purpose);
+			apl.setRemark(remark);
+			apl.setEquId(Integer.parseInt(equId));
+			Date date = new Date();
+	        SimpleDateFormat sdf =   new SimpleDateFormat( "yyyy-MM-dd" );
+	        Date time = sdf.parse(returnTime);
+	        apl.setReturnTime(time);
+			apl.setState("stay");   //stay  pass  fail
+			apl.setLoginName((String)session.getAttribute("loginName"));
+			
+			if(aplService.addApl(apl)){
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+			}
+			else{
+				map.put("success", "false");
+				map.put("err_code", "500");
+				map.put("message", "Ê∑ªÂä†ËÆæÂ§áÂ§±Ë¥•");
+			}
+		}
+		System.out.println("addApl:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+		
+	}
+	
+	
+	//,String method,String loginName,String equId,String state,String currentPage,String pageSize
+	@RequestMapping(value = "/getAplBySort", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String getAplBySort(@RequestBody String parms ,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		HttpSession session = request.getSession(false);
+		Map<Object,Object> map = new HashMap<>();  
+		List<Application> list=new ArrayList<Application>();
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String method=UtilsC.hasKeyOfMap("method", jsonObject);
+		String loginName=UtilsC.hasKeyOfMap("loginName", jsonObject);
+		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
+		String state=UtilsC.hasKeyOfMap("state", jsonObject);
+		String currentPage=UtilsC.hasKeyOfMap("currentPage", jsonObject);
+		String pageSize=UtilsC.hasKeyOfMap("pageSize", jsonObject);
+		
+		method=UtilsC.KongToNull(method);
+		loginName=UtilsC.KongToNull(loginName);
+		equId=UtilsC.KongToNull(equId);
+		state=UtilsC.KongToNull(state);
+		
+		if(loginName==null){
+			loginName="";
+		}
+		if(currentPage==null||pageSize==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "currentPageÊàñpageSize‰∏∫Á©∫");
+		}
+		else {
+			if(loginName.equals("currentUser")){
+				if(session.getAttribute("loginName")==null){
+					map.put("success", "false");
+					map.put("err_code", "401");
+					map.put("message", "Ë∫´‰ªΩËøáÊúü");
+					String json = JSONObject.fromObject(map).toString();
+					response.setHeader("Access-Control-Allow-Origin", "*");
+					response.setCharacterEncoding("UTF-8");
+					response.flushBuffer();
+					response.getWriter().write(json);
+					response.getWriter().flush();  
+					response.getWriter().close();
+					return null;
+				}
+				else{
+					loginName=(String)session.getAttribute("loginName");
+				}
+				
+			}
+			if(loginName.equals("")){
+				loginName=null;
+			}
+			int intEquId;
+			if(equId==null||equId.equals("")){
+				intEquId=0;
+			}
+			else{
+				intEquId=Integer.parseInt(equId);
+			}
+			list=aplService.getAplBySort(method,loginName,intEquId, state,Integer.parseInt(currentPage),Integer.parseInt(pageSize));
+			List<Map<String,Object>> newlist=new ArrayList<Map<String,Object>>();
+			for(Application apl:list){
+				Map<String,Object> mapinlist=new HashMap<String,Object>();
+				mapinlist.put("aplId", apl.getAplId());
+				mapinlist.put("method", apl.getMethod());
+				mapinlist.put("loginName", apl.getLoginName());
+				mapinlist.put("equId", apl.getEquId());
+				mapinlist.put("purpose", apl.getPurpose());
+				mapinlist.put("returnTime", apl.getReturnTime());
+				mapinlist.put("phone", apl.getPhone());
+				mapinlist.put("remark", apl.getRemark());
+				mapinlist.put("state", apl.getState());
+				mapinlist.put("userName", userService.getUserInfByLoginName(apl.getLoginName()).getUserName());
+				newlist.add(mapinlist);
+			}
+			map.put("data", newlist);
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
+			String json = JSONObject.fromObject(map).toString();
+			response.setHeader("Access-Control-Allow-Origin", "*");
+			response.setCharacterEncoding("UTF-8");
+			response.flushBuffer();
+			response.getWriter().write(json);
+			response.getWriter().flush();  
+			response.getWriter().close();
+			return null;
+		}
+			
+		System.out.println("getAplBySort:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+	}
+	
+	@RequestMapping(value = "/getApl", method = RequestMethod.POST, produces="application/json;charset=UTF-8")//json
+	public  @ResponseBody  String getApl(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+		Map<Object,Object> data = new HashMap<>();  
+		Application apl=new Application();
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String aplId=UtilsC.hasKeyOfMap("aplId", jsonObject);
+		if(aplId==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "‰º†ÂÖ•ÁöÑ‰ø°ÊÅØ‰∏∫Á©∫");
+		}
+		else{
+			apl=aplService.getApl(Integer.parseInt(aplId));
+			if(apl==null){
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "ÁºñÂè∑‰∏çÂ≠òÂú®");
+			}
+			else{
+				User user=new User();
+				user=userService.getUserInfByLoginName(apl.getLoginName());
+				
+				data.put("aplId", apl.getAplId());
+				data.put("loginName", user.getLoginName());
+				data.put("userName", user.getUserName());
+				data.put("method", apl.getMethod());
+				data.put("equId", apl.getEquId());
+				data.put("purpose", apl.getPurpose());
+				data.put("remark", apl.getRemark());
+				data.put("returnTime", apl.getReturnTime());
+				data.put("state", apl.getState());
+				data.put("phone", apl.getPhone());
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+				map.put("data", data);
+				
+			}
+			
 		}
 		
 		
+		System.out.println("getApl:"+map.toString());
 		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -161,109 +276,31 @@ public class AplContr {
 	
 	
 	
-	@RequestMapping(value = "/cheakApl", method = RequestMethod.POST,produces = "text/html;charset=UTF-8")
-	public  @ResponseBody  String updateEqu(HttpServletRequest request, HttpServletResponse response,int id,String state) throws IOException, ParseException{
-		HttpSession session = request.getSession(false);
-		if(session.getAttribute("userName")==null){
-			return "loginError";
-		}
-		application apl=new application();
-		apl=aplService.getApl(id);
-		if(apl==null){
-			return "no";
-		}
-		
-		if(apl.getMethod().equals("rent")&&state.equals("pass")){//ifÕ®π˝£¨‘ˆº”“ªÃı≥ˆø‚º«¬º      //ªπ”–‘§‘ºµƒ√ª–¥
-			record rec=new record();
-			
-			Date date = new Date();//ªÒµ√œµÕ≥ ±º‰.
-	        SimpleDateFormat sdf =   new SimpleDateFormat( " yyyy-MM-dd HH:mm:ss " );
-	        String nowTime = sdf.format(date);
-	        Date time = sdf.parse( nowTime );
-	        
-	   
-	        
-	        rec.setAdmin((String)session.getAttribute("userName"));
-			rec.setDate(time);
-			rec.setEquId(apl.getEquId());
-			rec.setEquName(apl.getEquName());
-			rec.setRemark("");
-			rec.setState("out");
-			rec.setUserId(apl.getUserId());
-			rec.setUserName(apl.getApplicant());
-			recService.addRecord(rec);
-			
-			equService.updateEquState(apl.getEquId(), "out");//–ﬁ∏ƒ…Ë±∏◊¥Ã¨
-			
-			equService.updateEqutime(time, apl.getEquId(), "out");
-			
-			
-			sucApplication suapl=new sucApplication();
-			suapl.setEquId(apl.getEquId());
-			suapl.setEquName(apl.getEquName());
-			suapl.setState("in");
-			suapl.setUserId(apl.getUserId());
-			suapl.setUserName(apl.getApplicant());
-			equipment equ=equService.getEqu(apl.getEquId());
-			suapl.setVersion(equ.getVersion());
-			
-			suAplService.addSuApl(suapl);
-			
-		}
-		else if(apl.getMethod().equals("order")&&state.equals("pass")){
-			
-			
-		}
-		
-		
-		
-		
-		if(aplService.updateApplication(id, state)){//–ﬁ∏ƒ…Í«Î◊¥Ã¨
-			
-			return "ok";
-		}
-		else{
-			return "no";
-		}
-		
-		
-	}
 	
 	
-	@RequestMapping(value = "/getAllAplByUser", method = RequestMethod.POST)
-	public  @ResponseBody  String getAllAplByUser(HttpServletRequest request, HttpServletResponse response) throws IOException{
-		HttpSession session = request.getSession(false);
-		HashMap<Object,Object> map = new HashMap<>();  
-		List<application> list=new ArrayList<application>();
-		if(session.getAttribute("userName")==null){
-			map.put("flag", "loginError");
-		}
-		else{
-			list=aplService.getAllAplByUser(Integer.parseInt((String)session.getAttribute("userId")));
-			map.put("data", list);
-			map.put("flag", "ok");
-		}
-		
-		String json = JSONObject.fromObject(map).toString();
-		response.setCharacterEncoding("UTF-8");
-		response.flushBuffer();
-		response.getWriter().write(json);
-		response.getWriter().flush();  
-		response.getWriter().close();
-		return null;
-		
-	}
+	
+
 	
 	
-	@RequestMapping(value = "/getAplCount", method = RequestMethod.POST)
+	@RequestMapping(value = "/getAplCount", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
 	public  @ResponseBody  String getAplCount(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
-		
-			int count=aplService.getAplCount();
-		
-			return Integer.toString(count);
-		
-		
-		
+		Map<Object,Object> map = new HashMap<>(); 
+		Map<Object,Object> data = new HashMap<>(); 
+		int count=aplService.getAplCount();
+		data.put("count", count);
+		map.put("data", data);
+		map.put("success", "true");
+		map.put("err_code", "0");
+		map.put("message", "ok");
+		String json = JSONObject.fromObject(map).toString();
+		System.out.println("getAplCount:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
 	}
 	
 	

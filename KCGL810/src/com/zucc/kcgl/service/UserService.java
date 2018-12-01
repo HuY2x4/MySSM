@@ -1,22 +1,22 @@
 package com.zucc.kcgl.service;
 
-import com.zucc.kcgl.model.MdUser;
+import com.zucc.kcgl.model.User;
 
 public interface UserService {
 
-	public boolean saveUser(MdUser user);
+	public boolean addUser(User user);
 	
-	public boolean deleteUser(String loginname);
+	public boolean deleteUser(String loginName);
 	
-	public MdUser getUserInf(String loginname);
+	public User getUserInfByLoginName(String loginName);
 	
-	public MdUser getUserInfById(int userid);
+	public User getUserAllInf(String loginName);
 	
-	public boolean updateUserInf(MdUser user);
+	public boolean updateUserInf(User user);
 	
-	public boolean updateUserPassword(String loginname,String password);
+	public boolean updateUserPassword(String loginName,String password);
 	
-	public boolean ifLoginNameRepeat(String loginname);
+	public boolean hasLoginNameRepeat(String loginName);
 	
 	public int getUserCount();
 

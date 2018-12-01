@@ -5,41 +5,79 @@
         
 
 <mapper namespace="com.zucc.kcgl.mapper.SuAplMapper">
-	<resultMap type="com.zucc.kcgl.model.sucApplication" id="suAplResultMap">
-		<id column="id" property="id"/>
-		<result column="equid" property="equId"/>
-		<result column="equname" property="equName"/>
-		<result column="state" property="state"/>
-		<result column="version" property="version"/>
-		<result column="userid" property="userId"/>
-		<result column="username" property="userName"/>
-		<result column="code" property="code"/>
-		
-		
-	</resultMap>
+
 	
-	<insert id="addSuApl" parameterType="com.zucc.kcgl.model.sucApplication">
-		insert sucapplication(equid,equname,state,version,userid,username,code) 
-		values(#{equId},#{equName},#{state},#{version},#{userId},#{userName},#{code})
+	<insert id="addSuApl" parameterType="com.zucc.kcgl.model.SucApplication">
+		insert sucapplication(equId,state,code,loginName) 
+		values(#{equId},#{state},#{code},#{loginName})
 	</insert>
 	
-	<update id="updateSuApl" parameterType="com.zucc.kcgl.model.sucApplication">
+	
+	<update id="updateSuAplByCode" parameterType="Map">
 		update sucapplication set state=#{state}
 		 where code=#{code}
 	</update>
 	
-	<select id="getSuApl" parameterType="int" resultType="com.zucc.kcgl.model.sucApplication">
-		select * from application where code=#{code}
+	<update id="updateSuAplToDie" parameterType="int">
+		update sucapplication set state='invalid'
+		 where sucAplId=#{sucAplId}
+	</update>
+	
+	<select id="getSuAplByEquAndIn" parameterType="Integer" resultType="com.zucc.kcgl.model.SucApplication">
+		select *
+		from sucapplication
+		where state="out" and equId=#{equId}
 	</select>
 	
-	<select id="getOutSuApl" parameterType="int" resultType="com.zucc.kcgl.model.sucApplication">
-		select * from application where code=#{code} and state='out'
+	<select id="getSuApl" parameterType="String" resultMap="suAplInf">
+		select sa.sucAplId,sa.equId,sa.state,sa.code,sa.loginName,
+		u.userName,e.equName,e.version 
+		from sucapplication sa,user u,equipment e 
+		where sa.loginName=u.loginName and sa.equId=e.equId and sa.code=#{code}
 	</select>
+	<resultMap type="SucApplication" id="suAplInf">
+		<result column="sucApcId" property="sucApcId"/>
+		<result column="equId" property="equId"/>
+		<result column="state" property="state"/>
+		<result column="code" property="code"/>
+		<result column="loginName" property="loginName"/>
+		<association property="equipment" javaType="com.zucc.kcgl.model.Equipment">
+			<result column="equId" property="equId"/>
+			<result column="equName" property="equName"/>
+			<result column="version" property="version"/>
+		</association>
+		<association property="user" javaType="com.zucc.kcgl.model.User">
+			<result column="loginName" property="loginName"/>
+			<result column="userName" property="userName"/>
+		</association>
+	</resultMap>
 	
-	<select id="getAllSuAplByUser" parameterType="int" resultType="com.zucc.kcgl.model.sucApplication">
-		select * from application where userid=#{userId}
+	<!-- <select id="getOutSuApl" parameterType="int" resultType="com.zucc.kcgl.model.SucApplication">
+		select * from sucapplication where code=#{code} and state='out'
+	</select> -->
+	
+	<select id="getAllSuAplByUser" parameterType="String" resultMap="suAplAllInf">
+		select sa.sucAplId,sa.equId,sa.state,sa.code,sa.loginName,
+		u.userName,e.equName,e.version 
+		from sucapplication sa,user u,equipment e
+		where sa.loginName=u.loginName and sa.equId=e.equId and sa.loginName=#{loginName}
 	</select>
-	
+	<resultMap type="SucApplication" id="suAplAllInf">
+		<result column="sucApcId" property="sucApcId"/>
+		<result column="equId" property="equId"/>
+		<result column="state" property="state"/>
+		<result column="code" property="code"/>
+		<result column="loginName" property="loginName"/>
+		<association property="equipment" javaType="com.zucc.kcgl.model.Equipment">
+			<result column="equId" property="equId"/>
+			<result column="equName" property="equName"/>
+			<result column="version" property="version"/>
+		</association>
+		<association property="user" javaType="com.zucc.kcgl.model.User">
+			<result column="loginName" property="loginName"/>
+			<result column="userName" property="userName"/>
+		</association>
+	</resultMap>
 	
 
 </mapper>

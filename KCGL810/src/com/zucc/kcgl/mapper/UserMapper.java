@@ -1,22 +1,24 @@
 package com.zucc.kcgl.mapper;
 
-import com.zucc.kcgl.model.MdUser;
+import com.zucc.kcgl.model.User;
+
+
 
 public interface UserMapper {
 
-	void saveUser(MdUser user);
+	int addUser(User user);
+
+	int deleteUser(String loginName);
 	
-	void deleteUser(String loginname);
+	User getUserInfByloginName(String loginName);
 	
-	MdUser getUserInf(String loginname);
+	User getUserAllInf(String loginName);
 	
-	MdUser getUserInfById(int id);
+	int updateUserInf(User user);
 	
-	void updateUserInf(MdUser user);
+	int updateUserPassword(User user);
 	
-	void updateUserPassword(MdUser user);
-	
-	String ifLoginNameRepeat(String loginname);
+	String hasLoginNameRepeat(String loginName);
 	
 	int getUserCount();
 }

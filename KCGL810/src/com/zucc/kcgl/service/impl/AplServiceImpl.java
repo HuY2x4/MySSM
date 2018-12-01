@@ -1,18 +1,17 @@
 package com.zucc.kcgl.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
 
 import com.zucc.kcgl.mapper.ApplicationMapper;
-import com.zucc.kcgl.mapper.EquMapper;
-import com.zucc.kcgl.model.application;
-import com.zucc.kcgl.model.equipment;
+import com.zucc.kcgl.model.Application;
 import com.zucc.kcgl.service.AplService;
-import com.zucc.kcgl.service.EquService;
 
 @Service
 public class AplServiceImpl implements AplService{
@@ -22,76 +21,72 @@ public class AplServiceImpl implements AplService{
 	private ApplicationMapper AplMapper;
 	
 	@Override
-	public boolean addApplication(application apl) {
+	public boolean addApl(Application apl) {
 		// TODO Auto-generated method stub
-		AplMapper.addApplication(apl);
+		if(AplMapper.addApl(apl)==0){
+			return false;
+		};
 		
 		return true;
 	}
 
 	@Override
-	public List<application> getAllBaseApl(String method,String state, int page, int num) {
+	public List<Application> getAplBySort(String method,String loginName,int equId,String state,int currentPage,int pageSize) {
 		// TODO Auto-generated method stub
-		List<application> list=new ArrayList<application>();
-		application apl=new application();
-		apl.setMethod(method);
-		apl.setState(state);
-		list=AplMapper.getAllBaseApl(apl);
-		List<application> listNew=new ArrayList<application>();
-		for(int i=0;i<num;i++){
-			listNew.add(list.get((page-1)*num+i));
+		List<Application> list=new ArrayList<Application>();
+		Map<String,Object> map=new HashMap<String,Object>();
+		map.put("startPage", (currentPage-1)*pageSize);
+		map.put("pageSize", pageSize);
+		if(!(method==null)){
+			map.put("method", method);
 		}
-		return listNew;
-	}
-
-	@Override
-	public application getApl(int id) {
-		// TODO Auto-generated method stub
-		application apl=new application();
-		apl=AplMapper.getApl(id);
-		return apl;
-	}
-
-	@Override
-	public boolean updateApplication(int id, String state) {
-		// TODO Auto-generated method stub
-		application apl=new application();
-		apl.setId(id);
-		apl.setState(state);
-		AplMapper.updateApplication(apl);
-		
-		return true;
-	}
-
-	@Override
-	public application getOrderApl(int equId) {
-		// TODO Auto-generated method stub
-		application apl=new application();
-		apl=AplMapper.getOrderApl(equId);
-		return apl;
-	}
-
-	@Override
-	public List<application> getAllAplByUser(int userId) {
-		// TODO Auto-generated method stub
-		List<application> list=new ArrayList<application>();
-		list=AplMapper.getAllAplByUser(userId);
+		if(!(loginName==null)){
+			map.put("loginName", loginName);
+		}
+		if(!(equId==0)){
+			map.put("equId", equId);
+		}
+		if(!(state==null)){
+			map.put("state", state);
+		}
+		list=AplMapper.getAplBySort(map);
 		return list;
 	}
 
 	@Override
-	public void updateOrderState(int id) {
+	public Application getApl(int equId) {
 		// TODO Auto-generated method stub
-		AplMapper.updateOrderState(id);
-		
-		return;
+		Application apl=new Application();
+		apl=AplMapper.getApl(equId);
+		return apl;
 	}
+
+	@Override
+	public boolean updateApl(Application apl) {
+		// TODO Auto-generated method stub
+		
+		if(AplMapper.updateApl(apl)==0){
+			return false;
+		}
+		
+		return true;
+	}
+
+
 
 	@Override
 	public int getAplCount() {
 		// TODO Auto-generated method stub
 		
 		return AplMapper.getAplCount();
+	}
+
+	@Override
+	public Application getOrderApl(int equId) {
+		// TODO Auto-generated method stub
+		Application apl=new Application();
+		apl=AplMapper.getOrderApl(equId);
+		return apl;
 	}
 
 }

@@ -2,21 +2,25 @@ package com.zucc.kcgl.mapper;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-import com.zucc.kcgl.model.equipment;
-import com.zucc.kcgl.model.record;
+import com.zucc.kcgl.model.EquRecord;
+
+
 
 public interface RecordMapper {
 
-	void addRecord(record record);
+	int addRecord(EquRecord record);
 	
-	void updateRecord(record record);
+	int updateRecord(EquRecord record);
 	
-	void deleteRecord(int id);
+	int deleteRecord(int recordId);
 	
-	List<record> getRecordByEqu(int equId);
+	EquRecord getRecord(int recordId);
 	
-	List<record> getRecordByUser(int userId);
+	List<EquRecord> getRecordByEqu(int equId);
 	
-	Date getTime(record record);
+	List<EquRecord> getRecordByUser(String loginName);
+	
+	Date getTime(Map<String,Object> map);
 }

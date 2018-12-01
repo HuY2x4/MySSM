@@ -16,14 +16,18 @@ import javax.servlet.http.HttpServletResponse;
 import net.sf.json.JSONObject;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.zucc.kcgl.model.MdUser;
-import com.zucc.kcgl.model.equipment;
+import com.zucc.kcgl.model.Equipment;
 import com.zucc.kcgl.service.EquService;
-import com.zucc.kcgl.service.UserService;
+import com.zucc.kcgl.util.PhotoUtil;
+import com.zucc.kcgl.util.UtilsC;
+import com.zucc.kcgl.util.getImgBase64;
 
 @Controller
 public class EquContr {
@@ -31,114 +35,86 @@ public class EquContr {
 	@Resource
 	private EquService equService;
 	
-	@RequestMapping("/equipmentList")
-	public String equipmentList(){  
-		return "equipment/equipmentList";
+	@RequestMapping("/EquipmentList")
+	public String EquipmentList(){  
+		return "Equipment/EquipmentList";
 	}
 	
-	@RequestMapping("/equipmentMain")
-	public String equipmentMain(){  
-		return "equipment/equipmentMain";
+	@RequestMapping("/EquipmentMain")
+	public String EquipmentMain(){  
+		return "Equipment/EquipmentMain";
 	}
 	
-	@RequestMapping(value = "/addEqu", method = RequestMethod.POST)
-	public  @ResponseBody  String addUser(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
-		equipment equ=new equipment();
-		
-		Date date = new Date();//���ϵͳʱ��.
-        SimpleDateFormat sdf =   new SimpleDateFormat( " yyyy-MM-dd HH:mm:ss " );
-        String nowTime = sdf.format(date);
-        Date time = sdf.parse( nowTime );
-        
-		equ.setName(request.getParameter("name"));
-		equ.setType(request.getParameter("type"));
-		equ.setVersion(request.getParameter("version"));
-		equ.setIndata(time);
-		equ.setPrice(Integer.parseInt(request.getParameter("price")));
-		equ.setOwner(request.getParameter("owner"));
-		equ.setChargePersion(request.getParameter("chargePerson"));
-		equ.setRemark(request.getParameter("reamrk"));
-		equ.setState(request.getParameter("state"));
-		equ.setFailureState("normal");
-	
-		if(equService.addEqu(equ)){
-			return "ok";
-		}
-		else{
-			return "no";
-		}
-		
-		
-	}
-	
-	
-	
-	
-	@RequestMapping(value = "/deleteEqu", method = RequestMethod.POST)
-	public  @ResponseBody  String deleteUser(HttpServletRequest request, HttpServletResponse response,int equId) throws IOException, ParseException{
-		
-		
-		if(equService.deleteEqu(equId)){
-			return "ok";
-		}
-		else{
-			return "no";
-		}
-		
-		
-	}
-	
-	
-	
-	@RequestMapping(value = "/updateEqu", method = RequestMethod.POST)
-	public  @ResponseBody  String updateEqu(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
-		equipment equ=new equipment();
-		
-		equ.setEquid(Integer.parseInt(request.getParameter("equId")));
-		equ.setName(request.getParameter("name"));
-		equ.setType(request.getParameter("type"));
-		equ.setVersion(request.getParameter("version"));
-		equ.setPrice(Integer.parseInt(request.getParameter("price")));
-		equ.setOwner(request.getParameter("owner"));
-		equ.setChargePersion(request.getParameter("chargePerson"));
-		equ.setRemark(request.getParameter("reamrk"));
-		equ.setState(request.getParameter("state"));
-		
-	
-		if(equService.updateEqu(equ)){
-			return "ok";
-		}
-		else{
-			return "no";
-		}
-		
-		
-	}
-	
-	
-	
-	@RequestMapping(value = "/getEqu", method = RequestMethod.GET)//json//���id������
-	public  @ResponseBody  String getUser(HttpServletRequest request, HttpServletResponse response,int  equId) throws IOException{
+	@RequestMapping(value = "/addEqu", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String addEqu( @RequestBody Equipment equipment,@RequestParam("imagePath") MultipartFile file
+			,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
 		Map<Object,Object> map = new HashMap<>();  
+		if(equipment==null||file==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
+		}
+		else{
+			Date date = new Date();
+	        SimpleDateFormat sdf =   new SimpleDateFormat( " yyyy-MM-dd HH:mm:ss " );
+	        String nowTime = sdf.format(date);
+	        Date time = sdf.parse( nowTime );
+	        equipment.setInDate(date);
+	        equipment.setImg(PhotoUtil.saveFile(file,request));
 		
-		
-		equipment equ=new equipment();
-		
-		equ=equService.getEqu(equId);
-		System.out.println(equ.getName());
-		map.put("equId", equ.getEquid());
-		map.put("name", equ.getName());
-		map.put("type", equ.getType());
-		map.put("version", equ.getVersion());
-		map.put("inDate", equ.getIndata());///////�յ�����
-		map.put("outDate", equ.getOutdata());
-		map.put("price", equ.getPrice());
-		map.put("owner", equ.getOwner());
-		map.put("chargePerson", equ.getChargePersion());
-		map.put("remark", equ.getRemark());
-		map.put("state", equ.getState());
-		map.put("flag", "ok");
+			if(equService.addEqu(equipment)){
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+			}
+			else{
+				map.put("success", "false");
+				map.put("err_code", "500");
+				map.put("message", "添加设备失败");
+			}
+		}
 		String json = JSONObject.fromObject(map).toString();
+		System.out.println("addEqu:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+		
+	}
+	
+	
+	
+	
+	@RequestMapping(value = "/deleteEqu", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String deleteUser(@RequestBody String parms ,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
+		
+		Map<Object,Object> map = new HashMap<>();  
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
+		if(equId==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
+		}
+		else{
+			if(equService.deleteEqu(Integer.parseInt(equId))){
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+			}
+			else{
+				map.put("success", "false");
+				map.put("err_code", "500");
+				map.put("message", "删除设备失败");
+			}
+		}
+		String json = JSONObject.fromObject(map).toString();
+		System.out.println("deleteEqu:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -149,15 +125,147 @@ public class EquContr {
 	}
 	
 	
-	@RequestMapping(value = "/getAllEquBaseInf", method = RequestMethod.GET)
-	public  @ResponseBody  String getAllEquBaseInf(HttpServletRequest request, HttpServletResponse response,int page,int num) throws IOException{
-		HashMap<Object,Object> map = new HashMap<>();  
-		List<equipment> list=new ArrayList<equipment>();
-		list=equService.getAllEqu(page, num);
-		map.put("data", list);
-		map.put("flag", "ok");
-		String json = JSONObject.fromObject(map).toString();
 	
+	@RequestMapping(value = "/updateEqu", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String updateEqu(@RequestBody Equipment equipment,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
+		Map<Object,Object> map = new HashMap<>(); 
+		if(equipment==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
+		}
+		else{
+			Equipment oldEqu=new Equipment();
+			oldEqu=equService.getEqu(equipment.getEquId());
+			if(oldEqu.getEquId()==0){
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "设备不存在");
+			}
+			else{
+				equipment.setImg(oldEqu.getImg());
+				equipment.setInDate(oldEqu.getInDate());
+				equipment.setOutDate(oldEqu.getOutDate());
+				if(equService.updateEqu(equipment)){
+					map.put("success", "true");
+					map.put("err_code", "0");
+					map.put("message", "ok");
+				}
+				else{
+					map.put("success", "false");
+					map.put("err_code", "500");
+					map.put("message", "更新设备失败");
+				}
+			}
+			
+		}
+		
+		String json = JSONObject.fromObject(map).toString();
+		System.out.println("updateEqu:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+	}
+	
+	@RequestMapping(value = "/updateEquImg", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String updateEquImg(@RequestBody String parms ,@RequestParam("imagePath") MultipartFile file,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
+		Map<Object,Object> map = new HashMap<>(); 
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
+		if(file==null||equId==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
+		}
+		else{
+			Equipment equipment=new Equipment();
+			equipment=equService.getEqu(Integer.parseInt(equId));
+			if(equipment==null){
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "设备不存在");
+			}
+			else{
+				equipment.setImg(PhotoUtil.saveFile(file,request));
+				if(equService.updateEqu(equipment)){
+					map.put("success", "true");
+					map.put("err_code", "0");
+					map.put("message", "ok");
+				}
+				else{
+					map.put("success", "false");
+					map.put("err_code", "500");
+					map.put("message", "更新设备图片失败");
+				}
+				
+			}
+			
+		}
+		String json = JSONObject.fromObject(map).toString();
+		System.out.println("updateEquImg:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+		
+	}
+	
+	
+	
+	@RequestMapping(value = "/getEqu", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String getEqu(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+		Map<Object,Object> data = new HashMap<>();  
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
+		if(equId==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
+		}
+		else{
+			Equipment equ=new Equipment();
+			equ=equService.getEqu(Integer.parseInt(equId));
+			if(equ==null){
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "设备不存在");
+			}
+			else{
+				data.put("equId", equ.getEquId());
+				data.put("equName", equ.getEquName());
+				data.put("type", equ.getType());
+				data.put("version", equ.getVersion());
+				data.put("inDate", equ.getInDate());
+				data.put("outDate", equ.getOutDate());
+				data.put("price", equ.getPrice());
+				data.put("owner", equ.getOwner());
+				data.put("manager", equ.getManager());
+				data.put("remark", equ.getRemark());
+				data.put("state", equ.getState());
+				String imageBase64=getImgBase64.getImageStr(equ.getImg());
+				data.put("img", imageBase64);
+				
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+				map.put("data", data);
+			}
+			
+		}
+		
+		String json = JSONObject.fromObject(map).toString();
+		System.out.println("getEqu:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -168,15 +276,31 @@ public class EquContr {
 	}
 	
 	
-	@RequestMapping(value = "/getAllEquBaseInfBySort", method = RequestMethod.GET)
-	public  @ResponseBody  String getAllEquBaseInfBySort(HttpServletRequest request, HttpServletResponse response,int page,int num,String type,String state) throws IOException{
-		HashMap<Object,Object> map = new HashMap<>();  
-		List<equipment> list=new ArrayList<equipment>();
-		list=equService.getAllEquSort(page, num, type, state);
-		map.put("data", list);
-		map.put("flag", "ok");
+	@RequestMapping(value = "/getAllEquBaseInf", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String getAllEquBaseInf(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+
+		List<Equipment> list=new ArrayList<Equipment>();
+		list=equService.getAllEqu();
+		if(list==null){
+			map.put("success", "false");
+			map.put("err_code", "404");
+			map.put("message", "查找失败");
+		}
+		else{
+			for(Equipment equ:list){
+				String imgstr=getImgBase64.getImageStr(equ.getImg());
+				equ.setImg(imgstr);
+			}
+			map.put("data", list);
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
+		}
 		
 		String json = JSONObject.fromObject(map).toString();
+		System.out.println("getAllEquBaseInf:data");
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -186,13 +310,72 @@ public class EquContr {
 		
 	}
 	
-	@RequestMapping(value = "/getEquCount", method = RequestMethod.POST)
+	//String currentPage,String pageSize,String type,String state,String equName
+	@RequestMapping(value = "/getAllEquBaseInfBySort", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String getAllEquBaseInfBySort(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+		List<Equipment> list=new ArrayList<Equipment>();
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String currentPage=UtilsC.hasKeyOfMap("currentPage", jsonObject);
+		String pageSize=UtilsC.hasKeyOfMap("pageSize", jsonObject);
+		String type=UtilsC.hasKeyOfMap("type", jsonObject);
+		String state=UtilsC.hasKeyOfMap("state", jsonObject);
+		String equName=UtilsC.hasKeyOfMap("equName", jsonObject);
+	
+		type=UtilsC.KongToNull(type);
+		state=UtilsC.KongToNull(state);
+		equName=UtilsC.KongToNull(equName);
+		System.out.println("parms:"+parms.toString());
+		System.out.println("type:"+type);
+
+		if(currentPage==null||pageSize==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "currentPage或pageSize为空");
+		}
+		else{
+			list=equService.getPageEquSort(Integer.parseInt(currentPage),Integer.parseInt(pageSize), type, state,equName);
+			for(Equipment equ:list){
+				equ.setImg(getImgBase64.getImageStr(equ.getImg()));
+			}
+			map.put("data", list);
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
+		}
+		
+		
+		String json = JSONObject.fromObject(map).toString();
+		System.out.println("getAllEquBaseInfBySort:data");
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+	}
+	
+	@RequestMapping(value = "/getEquCount", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
 	public  @ResponseBody  String getEquCount(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
-		
+			Map<Object,Object> map = new HashMap<>(); 
+			Map<Object,Object> data = new HashMap<>(); 
 			int count=equService.getEquCount();
-		
-			return Integer.toString(count);
-		
+			data.put("count", count);
+			map.put("data", data);
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
+			String json = JSONObject.fromObject(map).toString();
+			System.out.println("getEquCount:"+map.toString());
+			response.setHeader("Access-Control-Allow-Origin", "*");
+			response.setCharacterEncoding("UTF-8");
+			response.flushBuffer();
+			response.getWriter().write(json);
+			response.getWriter().flush();  
+			response.getWriter().close();
+			return null;
 		
 		
 	}

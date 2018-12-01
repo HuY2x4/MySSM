@@ -1,26 +1,26 @@
 package com.zucc.kcgl.mapper;
 
 import java.util.List;
+import java.util.Map;
 
-import com.zucc.kcgl.model.application;
-import com.zucc.kcgl.model.equipment;
+import com.zucc.kcgl.model.Application;
+
+
 
 public interface ApplicationMapper {
 
-	void addApplication(application apl);
+	int addApl(Application apl);
 	
-	List<application> getAllBaseApl(application apl);
+	List<Application> getAplBySort(Map<String,Object> map);
 	
-	application getApl(int id);
+	Application getApl(int aplId);
 	
-	void updateApplication(application apl);
-	
-	application getOrderApl(int equId);
-	
-	void updateOrderState(int id);
-	
-	List<application> getAllAplByUser(int userId);
+	int updateApl(Application apl);
 	
 	int getAplCount();
+	
+	Application getOrderApl(int equId);
+	
+	
 	
 }

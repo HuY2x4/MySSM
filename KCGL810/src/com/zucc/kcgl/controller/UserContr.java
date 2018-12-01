@@ -4,9 +4,7 @@ package com.zucc.kcgl.controller;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -16,15 +14,22 @@ import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.zucc.kcgl.model.MdUser;
+import com.zucc.kcgl.model.User;
+import com.zucc.kcgl.model.UserSchoolInf;
+import com.zucc.kcgl.service.UserIdService;
+import com.zucc.kcgl.service.UserSchoolInfService;
 import com.zucc.kcgl.service.UserService;
+import com.zucc.kcgl.util.PhotoUtil;
+import com.zucc.kcgl.util.UtilsC;
 
 
 
@@ -32,11 +37,16 @@ import com.zucc.kcgl.service.UserService;
 public class UserContr {
 	@Resource
 	private UserService userService;
+	@Resource
+	private UserIdService userIdService;
+	@Resource
+	private UserSchoolInfService userSchoolInfService;
+	
 	
 	@RequestMapping("/")
 	public String login(){  
 		
-		return "user/login";
+		return "test";
 	}
 	
 	@RequestMapping("/main")
@@ -70,84 +80,236 @@ public class UserContr {
 		return "user/userOtherInf";
 	}
 	
-	@RequestMapping(value = "/addUser", method = RequestMethod.POST)
-	public  @ResponseBody  String saveUser(HttpServletRequest request, HttpServletResponse response,String userName,String loginName,String password ,String phone) throws IOException{//HttpServletRequest request, HttpServletResponse response,
-		//String name=request.getParameter("name");   //��ǰ�˷�����������ȡֵ
-		HashMap<Object,Object> map = new HashMap<>();  
-		map.put("flag", "ok"); 
-		String json = JSONObject.fromObject(map).toString();//
+	@RequestMapping(value = "/hasExpired", method = RequestMethod.POST)
+	public  @ResponseBody  String HasExpired(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+
+		HttpSession session = request.getSession();	
+		if(session.getAttribute("loginName")==null){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期");
+		}
+		else{
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
+		}
 		
-		List<String> list=new ArrayList<String>();
-		
-		//�����ݷ���
-		/*response.setCharacterEncoding("UTF-8");
+		System.out.println("hasExpired:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
 		response.getWriter().flush();  
-		response.getWriter().close();*/
+		response.getWriter().close();
+		return null;
 		
-		MdUser user=new MdUser();
-		user.setUserName(userName);
-		user.setLoginName(loginName);
-		user.setPassword(password);
-		user.setPhone(phone);
-		
-		/*if(userService.ifLoginNameRepeat(loginName)){
-			return "noNR";
-		}*/
-		
-		if(userService.saveUser(user) ){//  //����Ǵ����ݿ�ȡֵ�ģ��õ�mybatis ������һ����Ŀ�о���  
-			return "ok";//�����д���ˣ�
-		}
-		else{
-			return "no";
-		}
-		
-	
 		
 	}
 	
-	@RequestMapping(value = "/deleteUser", method = RequestMethod.POST)
-	public  @ResponseBody  String deleteUser(HttpServletRequest request, HttpServletResponse response,String loginName) throws IOException{
-		
-		if(userService.deleteUser(loginName)){
-			return "ok";
-		}
-		else{
-			return "no";
-		}
-		
-	
-		
-	}
-	
-	
-	@RequestMapping(value = "/getUser", method = RequestMethod.POST)//json
-	public  @ResponseBody  String getUser(HttpServletRequest request, HttpServletResponse response,String loginName) throws IOException{
+	@RequestMapping(value = "/cheakLoginName", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String ifLoginNameRepeat(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException{
 		Map<Object,Object> map = new HashMap<>();  
-		
-		System.out.println(loginName);
-		MdUser user=new MdUser();
-		if(!userService.ifLoginNameRepeat(loginName)){
-			map.put("flag", "no");
-			String json = JSONObject.fromObject(map).toString();
-			return json;
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String loginName=UtilsC.hasKeyOfMap("loginName", jsonObject);
+		if(userService.hasLoginNameRepeat(loginName)){ 
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
 		}
-		user=userService.getUserInf(loginName);
-		map.put("userId", user.getUserId());
-		
-		map.put("userName", user.getUserName());
-		map.put("loginName", user.getLoginName());
-		map.put("password", user.getPassword());
-		map.put("phone", user.getPhone());
-		map.put("email", user.getEmail());
-		map.put("stuOrTea", user.getStuOrTea());
-		map.put("userNum", user.getUserNum());
-		map.put("userFrom", user.getUserFrom());
-		map.put("points", user.getPoints());
-		map.put("flag", "ok");
-		System.out.println(user.getUserId());
+		else{
+			map.put("success", "false");
+			map.put("err_code", "404");
+			map.put("message", "用户不存在");
+		}
+		System.out.println("cheakLoginName:"+map.toString());
 		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+		
+	}
+		
+	@RequestMapping(value = "/addUser", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String addUser(@RequestBody User user,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+		if(user==null||user.getLoginName().equals("")||user.getPassword().equals("")||user.getUserName().equals("")){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的用户信息为空");
+		}
+		else if(userService.hasLoginNameRepeat(user.getLoginName())){//如果登入账号重复
+			map.put("success", "false");
+			map.put("err_code", "-1");
+			map.put("message", "登录账号已存在");
+		}
+		else if(!userService.addUser(user)){
+			map.put("success", "false");
+			map.put("err_code", "500");
+			map.put("message", "服务器添加用户失败");
+		}
+		else if(!userIdService.addUserIdMap(user.getLoginName())){
+			map.put("success", "false");
+			map.put("err_code", "500");
+			map.put("message", "服务器添加用户映射表失败");
+		}
+		else{
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
+		}
+		System.out.println("addUser:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+		
+	
+		
+	}
+	
+	@RequestMapping(value = "/deleteUser", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String deleteUser(@RequestBody String parms, HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String loginName=UtilsC.hasKeyOfMap("loginName", jsonObject);
+		if(loginName==null||loginName.equals("")){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的用户信息为空");
+		}
+		else if(!userService.hasLoginNameRepeat(loginName)){ 
+			map.put("success", "false");
+			map.put("err_code", "404");
+			map.put("message", "登录账号不存在");
+		}
+		else if(!userService.deleteUser(loginName)){
+			map.put("success", "false");
+			map.put("err_code", "500");
+			map.put("message", "服务器删除用户失败");
+		}
+		else if(!userIdService.deleteUserIdMap(loginName)){
+			map.put("success", "false");
+			map.put("err_code", "500");
+			map.put("message", "服务器删除用户映射表失败");
+		}
+		else{
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
+		}
+		System.out.println("deleteUser:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+		
+	
+		
+	}
+	
+	/* getUser的结构
+	 * 
+	 * if(loginName为空){
+	 * 	map加入400code
+	 *}
+	 *else{
+	 * 	if(loginName指定当前登录账号){
+	 * 		if(身份过期){
+	 * 			map加入401code
+	 * 			return map			
+	 * 		}
+	 * 		else {
+	 * 			获得当前登录账号
+	 * 		}
+	 * 	}
+	 * 
+	 * 	if(登录账号不存在){
+	 * 		map加入404code
+	 * 	}
+	 *  else{
+	 *  	map将用户信息加入
+	 *  }
+	 *}
+	 *return map
+	 * */
+	@RequestMapping(value = "/getUser", method = RequestMethod.POST, produces="application/json;charset=UTF-8")//json
+	public  @ResponseBody  String getUser(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>(); 
+		User user=new User();
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String loginName=UtilsC.hasKeyOfMap("loginName", jsonObject);
+		if(loginName==null||loginName.equals("")){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的用户信息为空");
+		}
+		else {
+			if(loginName.equals("currentUser")){//如果是当前用户
+				HttpSession session = request.getSession();	
+				if(session.getAttribute("loginName")==null){
+					map.put("success", "false");
+					map.put("err_code", "401");
+					map.put("message", "身份过期需要重新登录");
+					String json = JSONObject.fromObject(map).toString();
+					response.setHeader("Access-Control-Allow-Origin", "*");
+					response.setCharacterEncoding("UTF-8");
+					response.flushBuffer();
+					response.getWriter().write(json);
+					response.getWriter().flush();  
+					response.getWriter().close();
+					return null;
+				}
+				else{
+					loginName = (String)session.getAttribute("loginName");
+				}
+			}
+			
+			if(!userService.hasLoginNameRepeat(loginName)){
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "登录账号不存在");
+			}
+			else {
+				Map<Object,Object> data = new HashMap<>(); 
+				user=userService.getUserAllInf(loginName);
+				data.put("userId",user.getUserMapper().getUserId());
+				data.put("userName", user.getUserName());
+				data.put("loginName", user.getLoginName());
+				data.put("password", user.getPassword());
+				data.put("phone", user.getPhone());
+				data.put("email", user.getEmail());
+				data.put("points", user.getPoints());
+				data.put("stuOrTea", user.getUserSchoolInf().getStuOrTea());
+				data.put("userSchoolId", user.getUserSchoolInf().getUserSchoolId());
+				data.put("userFrom", user.getUserSchoolInf().getUserFrom());
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+				map.put("data", data);
+			
+			}
+		}
+		System.out.println("getUser:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -158,118 +320,298 @@ public class UserContr {
 	}
 	
 	
-	@RequestMapping(value = "/login", method = RequestMethod.POST)
-	public  @ResponseBody  String dengLu(HttpServletRequest request, HttpServletResponse response,String loginName,String password) throws IOException{	
-		MdUser user=userService.getUserInf(loginName);
-		String mima=user.getPassword();
-		String userName=user.getUserName();
-		int userId=user.getUserId();
-		HttpSession session = request.getSession();	
-		if(mima.equals(password)){	
-			System.out.println("��¼�ɹ�");
-			session.setAttribute("loginName", loginName);
-			session.setAttribute("userName", userName);
-			session.setAttribute("userId", Integer.toString(userId));
-			return "ok";
+	@RequestMapping(value = "/login", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String login(@RequestBody User user1,HttpServletRequest request, HttpServletResponse response) throws IOException{	
+		Map<Object,Object> map = new HashMap<>(); 
+		String loginName=user1.getLoginName();
+		String password=user1.getPassword();
+		if(loginName==null||loginName.equals("")){ 
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的用户信息为空");
+		}
+		else if(!userService.hasLoginNameRepeat(loginName)){
+			System.out.println("loginName:"+loginName+"  "+password);
+			map.put("success", "false");
+			map.put("err_code", "404");
+			map.put("message", "登录账号不存在");
 		}
 		else{
-			return "no";//�˺Ż��������
+			User user=userService.getUserInfByLoginName(loginName);
+			String mima=user.getPassword();
+			HttpSession session = request.getSession();	
+			if(mima.equals(password)){	
+				session.setAttribute("loginName", loginName);
+				session.setAttribute("userName", user.getUserName());
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+			}
+			else{
+				map.put("success", "false");
+				map.put("err_code", "-1");
+				map.put("message", "密码错误");
+			}
 		}
+		
+		
+		System.out.println("login:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+	}
+	
+	
+	
+	@RequestMapping(value = "/updateUserInf", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String updateUserInf(@RequestBody User user,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>(); 
+		if(user==null){ 
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的用户信息为空");
+		}
+		else {
+			if(user.getLoginName().equals("currentUser")){
+				HttpSession session = request.getSession();	
+				if(session.getAttribute("loginName")==null){
+					map.put("success", "false");
+					map.put("err_code", "401");
+					map.put("message", "身份过期需要重新登录");
+					String json = JSONObject.fromObject(map).toString();
+					response.setHeader("Access-Control-Allow-Origin", "*");
+					response.setCharacterEncoding("UTF-8");
+					response.flushBuffer();
+					response.getWriter().write(json);
+					response.getWriter().flush();  
+					response.getWriter().close();
+					return null;
+				}
+				else{
+					user.setLoginName((String)session.getAttribute("loginName"));
+				}
+			}
+			
+			if(!userService.hasLoginNameRepeat(user.getLoginName())){ 
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "登录账号不存在");
+			}
+			else{
+				User newuser=userService.getUserInfByLoginName(user.getLoginName());
+				newuser.setEmail(user.getEmail());
+				newuser.setPhone(user.getPhone());
+				if(userService.updateUserInf(newuser)){ 
+					map.put("success", "true");
+					map.put("err_code", "0");
+					map.put("message", "ok");
+				}
+				else{
+					map.put("success", "false");
+					map.put("err_code", "500");
+					map.put("message", "更新用户信息失败");
+				}
+				
+			}
+			
+		}
+		System.out.println("updateUserInf:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
 		
 		
 		
 	}
 	
 	
-	
-	@RequestMapping(value = "/updateUserInf", method = RequestMethod.POST)
-	public  @ResponseBody  String updateUser(HttpServletRequest request, HttpServletResponse response,String loginName,String userName,String phone,String email,String stuOrTea,String userNum,String userFrom) throws IOException{
-		
-		MdUser user=new MdUser();
-		user.setEmail(email);
-		user.setLoginName(loginName);
-		user.setPhone(phone);
-		user.setStuOrTea(stuOrTea);
-		user.setUserFrom(userFrom);
-		user.setUserName(userName);
-		user.setUserNum(userNum);
-		
-		if(userService.updateUserInf(user)){ 
-			return "ok";
+	@RequestMapping(value = "/updateUserSchoolInf", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String updateUserSchoolInf(@RequestBody UserSchoolInf userSchoolInf ,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>(); 
+		if(userSchoolInf==null){ 
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
 		}
 		else{
-			return "no";
+			HttpSession session = request.getSession();	
+			if(session.getAttribute("loginName")==null){
+				map.put("success", "false");
+				map.put("err_code", "401");
+				map.put("message", "身份过期需要重新登录");
+			}
+			else{
+				String loginName = (String)session.getAttribute("loginName");
+				User user2=userService.getUserAllInf(loginName);
+				if(!(user2.getUserSchoolId()==null)){
+					map.put("success", "false");
+					map.put("err_code", "-1");
+					map.put("message", "学生或教师信息已绑定");
+				}
+				else if(userSchoolInfService.hasUserSchoolInf(userSchoolInf.getUserSchoolId())){
+					map.put("success", "false");
+					map.put("err_code", "-1");
+					map.put("message", "学生或教师信息已绑定");
+				}
+				else if(userSchoolInfService.addUserSchoolInf(userSchoolInf)==0){ 
+					map.put("success", "false");
+					map.put("err_code", "500");
+					map.put("message", "绑定信息失败");
+				}
+				else{
+					User user=userService.getUserInfByLoginName(loginName);
+					user.setUserSchoolId(userSchoolInf.getUserSchoolId());
+					if(!userService.updateUserInf(user)){
+						map.put("success", "false");
+						map.put("err_code", "500");
+						map.put("message", "修改用户信息失败");
+					}
+					else{
+						map.put("success", "true");
+						map.put("err_code", "0");
+						map.put("message", "ok");
+					}
+				}
+			}
 		}
+		System.out.println("updateUserSchoolInf:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
 		
-	
 		
 	}
 	
 	
-	@RequestMapping(value = "/updateUserPassword", method = RequestMethod.POST)
-	public  @ResponseBody  String updateUserPassword(HttpServletRequest request, HttpServletResponse response,String password) throws IOException{
+	@RequestMapping(value = "/updateUserPassword", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String updateUserPassword(@RequestBody String parms ,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>(); 
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String password=UtilsC.hasKeyOfMap("password", jsonObject);
+		if(password==null||password.equals("")){ 
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
+		}
+		else{
+			HttpSession session = request.getSession(false);
+			if(session.getAttribute("loginName")==null){
+				map.put("success", "false");
+				map.put("err_code", "401");
+				map.put("message", "身份过期需要重新登录");
+			}
+			else{
+				String loginName = (String)session.getAttribute("loginName");
+				if(userService.updateUserPassword(loginName, password)){ 
+					map.put("success", "true");
+					map.put("err_code", "0");
+					map.put("message", "ok");
+				}
+				else{
+					map.put("success", "false");
+					map.put("err_code", "500");
+					map.put("message", "修改用户密码错误");
+				}
+			}
+			
+		}
+		System.out.println("updateUserPassword:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
+		
+	}
+	
+	
+	
+	
+	
+	@RequestMapping(value = "/logout", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String logout(HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>(); 
 		HttpSession session = request.getSession(false);
-		String loginName = (String)session.getAttribute("loginName");
-		if(loginName.equals("")||loginName==null){
-			return "loginError";
-		}
-		
-		if(userService.updateUserPassword(loginName, password)){ 
-			return "ok";
+		if(session.getAttribute("loginName")==null){
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
 		}
 		else{
-			return "no";
+			session.removeAttribute("loginName");
+			map.put("success", "true");
+			map.put("err_code", "0");
+			map.put("message", "ok");
 		}
-		
-	
-		
-	}
-	
-	@RequestMapping(value = "/cheakLoginName", method = RequestMethod.POST)
-	public  @ResponseBody  String ifLoginNameRepeat(HttpServletRequest request, HttpServletResponse response,String loginName) throws IOException{
-		
-		
-		if(userService.ifLoginNameRepeat(loginName)){ 
-			return "no";//�ظ���
-		}
-		else{
-			return "ok";
-		}
-		
-	
-		
-	}
-	
-	
-	@RequestMapping(value = "/logout", method = RequestMethod.POST)
-	public  @ResponseBody  String zhuXiao(HttpServletRequest request, HttpServletResponse response) throws IOException{
-		HttpSession session = request.getSession(false);
-		session.removeAttribute("loginName");
-	
-		return "ok";
+		System.out.println("logout:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
 		
 		
 	
 		
 	}
 	
-	@RequestMapping(value = "/getUserCount", method = RequestMethod.POST)
+	@RequestMapping(value = "/getUserCount", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
 	public  @ResponseBody  String getUserCount(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
-		
-			int count=userService.getUserCount();
-		
-			return Integer.toString(count);
+		Map<Object,Object> map = new HashMap<>(); 
+		Map<Object,Object> data = new HashMap<>(); 
+		int count=userService.getUserCount();
+		data.put("count",count);
+		map.put("success", "true");
+		map.put("err_code", "0");
+		map.put("message", "ok");
+		map.put("data", data);
+		System.out.println("getUserCount:"+map.toString());
+		String json = JSONObject.fromObject(map).toString();
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		response.setCharacterEncoding("UTF-8");
+		response.flushBuffer();
+		response.getWriter().write(json);
+		response.getWriter().flush();  
+		response.getWriter().close();
+		return null;
 		
 		
 		
 	}
 	
 	@RequestMapping(value = "/test", method = RequestMethod.POST)
-	public  @ResponseBody  String test(HttpServletRequest request, HttpServletResponse response,String time) throws IOException{
+	public    String test(Model model,@RequestParam("images") MultipartFile file
+		     , HttpServletRequest request) throws IOException{
 		//window.location.href = "<%=basePath%>main"
-			
+		//锟斤拷一锟街凤拷锟斤拷页锟斤拷姆锟斤拷锟�
+        //model.addAttribute("img",PhotoUtil.saveFile(file,request));
+       //锟节讹拷锟街凤拷锟斤拷页锟斤拷姆锟斤拷锟�
+        request.setAttribute("images",PhotoUtil.saveFile(file,request));
+        return "test";
 		
-			return "ok";
+			
 		
 	}
 	

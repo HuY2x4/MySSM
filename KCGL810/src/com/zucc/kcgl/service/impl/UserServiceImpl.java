@@ -2,47 +2,52 @@ package com.zucc.kcgl.service.impl;
 
 import javax.annotation.Resource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.zucc.kcgl.mapper.UserMapper;
-import com.zucc.kcgl.model.MdUser;
+import com.zucc.kcgl.model.User;
 import com.zucc.kcgl.service.UserService;
 
 @Service
 public class UserServiceImpl implements UserService{
 	@Resource
 	private UserMapper userMapper;
+
 	
 	@Override
-	public boolean saveUser(MdUser user) {
+	public boolean addUser(User user) {
 		// TODO Auto-generated method stub
-		boolean result=false;
-		System.out.println("22");
-		userMapper.saveUser(user);
-		result=true;
-		return result;
-	}
-
-	@Override
-	public boolean deleteUser(String loginname) {
-		// TODO Auto-generated method stub
-		userMapper.deleteUser(loginname);
+		/*这里有个事物提交的问题还要去研究,在外面
+		 * 
+		 * */
+//		System.out.println("【执行中】UserServiceImpl：saveUser");
+		if(userMapper.addUser(user)==0){//添加用户
+			return false;
+		};
+		
 		return true;
 	}
 
 	@Override
-	public MdUser getUserInf(String loginname) {
+	public boolean deleteUser(String loginName) {
 		// TODO Auto-generated method stub
-		MdUser user=new MdUser();
-		user=userMapper.getUserInf(loginname);
+		if(userMapper.deleteUser(loginName)==0){//删除用户
+			return false;
+		};
+	
+		return true;
+	}
+
+	@Override
+	public User getUserInfByLoginName(String loginName) {
+		// TODO Auto-generated method stub
+		User user=new User();
+		user=userMapper.getUserInfByloginName(loginName);
 		return user;
 	}
 
 	@Override
-	public boolean updateUserInf(MdUser user) {
+	public boolean updateUserInf(User user) {
 		// TODO Auto-generated method stub
 		userMapper.updateUserInf(user);
 		return true;
@@ -51,7 +56,7 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public boolean updateUserPassword(String loginname, String password) {
 		// TODO Auto-generated method stub
-		MdUser user=new MdUser();
+		User user=new User();
 		user.setLoginName(loginname);
 		user.setPassword(password);
 		userMapper.updateUserPassword(user);
@@ -59,31 +64,32 @@ public class UserServiceImpl implements UserService{
 	}
 
 	@Override
-	public boolean ifLoginNameRepeat(String loginname) {
+	public boolean hasLoginNameRepeat(String loginname) {
 		// TODO Auto-generated method stub
-		String name=userMapper.ifLoginNameRepeat(loginname);
+		String name=userMapper.hasLoginNameRepeat(loginname);
+		if(name==null){
+			return false;
+		}
 		if(name.equals(loginname)){
 			return true;
 		}
 		
-		
-		
-		
 		return false;
 	}
 
-	@Override
-	public MdUser getUserInfById(int userid) {
-		// TODO Auto-generated method stub
-		MdUser user=new MdUser();
-		user=userMapper.getUserInfById(userid);
-		return user;
-	}
+
 
 	@Override
 	public int getUserCount() {
 		// TODO Auto-generated method stub
 		return userMapper.getUserCount();
+	}
+
+	@Override
+	public User getUserAllInf(String loginName) {
+		// TODO Auto-generated method stub
+		
+		return userMapper.getUserAllInf(loginName);
 	}
 
 	

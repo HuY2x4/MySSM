@@ -4,23 +4,28 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.zucc.kcgl.model.equipment;
-import com.zucc.kcgl.model.record;
+import com.zucc.kcgl.model.EquRecord;
 import com.zucc.kcgl.service.EquService;
 import com.zucc.kcgl.service.RecordService;
 import com.zucc.kcgl.service.UserService;
+import com.zucc.kcgl.util.UtilsC;
+
+
 
 @Controller
 public class RecordContr {
@@ -32,23 +37,53 @@ public class RecordContr {
 	@Resource
 	private UserService userService;
 	
-	@RequestMapping(value = "/getRecordByEqu", method = RequestMethod.POST)
-	public  @ResponseBody  String getRecordByEqu(HttpServletRequest request, HttpServletResponse response,int equId) throws IOException{
-		HashMap<Object,Object> map = new HashMap<>();  
-		List<record> list=new ArrayList<record>();
-		if(equService.getEqu(equId)==null){
-			map.put("flag", "no");
+	@RequestMapping(value = "/getRecordByEqu", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String getRecordByEqu( @RequestBody String parms ,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+		List<EquRecord> list=new ArrayList<EquRecord>();
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
+		if(equId==null){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
 		}
 		else{
-			list=recService.getRecordByEqu(equId);
-			map.put("data", list);
-			map.put("flag", "ok");
+			if(equService.getEqu(Integer.parseInt(equId))==null){
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "设备不存在");
+			}
+			else{
+				list=recService.getRecordByEqu(Integer.parseInt(equId));
+				List<Map<String,Object>> newlist=new ArrayList<Map<String,Object>>();
+				for(EquRecord record:list){
+					Map<String,Object> mapinlist=new HashMap<String,Object>();
+					mapinlist.put("recordId",record.getRecordId());
+					mapinlist.put("equId",record.getEquId());
+					mapinlist.put("equName", record.getEquipment().getEquName());
+					mapinlist.put("version", record.getEquipment().getVersion());
+					mapinlist.put("state",record.getState());
+					mapinlist.put("date", record.getDate());
+					mapinlist.put("loginName",record.getLoginName());
+					mapinlist.put("userName",record.getUser().getUserName());
+					mapinlist.put("remark", record.getRemark());
+					mapinlist.put("registrar", record.getRegistrar());
+					newlist.add(mapinlist);
+				}
+				map.put("data", newlist);
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+			}
 		}
+		
 		
 		
 		
 		String json = JSONObject.fromObject(map).toString();
-		System.out.println(json);
+		System.out.println("getRecordByEqu:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -58,20 +93,70 @@ public class RecordContr {
 		
 	}
 	
-	@RequestMapping(value = "/getRecordByUser", method = RequestMethod.POST)
-	public  @ResponseBody  String getRecordByUser(HttpServletRequest request, HttpServletResponse response,int userId) throws IOException{
-		HashMap<Object,Object> map = new HashMap<>();  
-		List<record> list=new ArrayList<record>();
-		if(userService.getUserInfById(userId)==null){
-			map.put("flag", "no");
+	@RequestMapping(value = "/getRecordByUser", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public  @ResponseBody  String getRecordByUser(@RequestBody String parms ,HttpServletRequest request, HttpServletResponse response) throws IOException{
+		Map<Object,Object> map = new HashMap<>();  
+		List<EquRecord> list=new ArrayList<EquRecord>();
+		JSONObject jsonObject = JSONObject.fromObject(parms);
+		String loginName=UtilsC.hasKeyOfMap("loginName", jsonObject);
+		if(loginName==null||loginName.equals("")){
+			map.put("success", "false");
+			map.put("err_code", "400");
+			map.put("message", "传入的信息为空");
 		}
 		else{
-			list=recService.getRecordByUser(userId);
-			map.put("data", list);
-			map.put("flag", "ok");
+			if(loginName.equals("currentUser")){
+				HttpSession session = request.getSession(false);
+				if(session.getAttribute("loginName")==null){
+					map.put("success", "false");
+					map.put("err_code", "401");
+					map.put("message", "身份过期");
+					String json = JSONObject.fromObject(map).toString();
+					response.setHeader("Access-Control-Allow-Origin", "*");
+					response.setCharacterEncoding("UTF-8");
+					response.flushBuffer();
+					response.getWriter().write(json);
+					response.getWriter().flush();  
+					response.getWriter().close();
+					return null;
+				}
+				else{
+					loginName=(String)session.getAttribute("loginName");
+				}
+			}
+			
+			if(!userService.hasLoginNameRepeat(loginName)){
+				map.put("success", "false");
+				map.put("err_code", "404");
+				map.put("message", "登录账号不存在");
+			}
+			else{
+				list=recService.getRecordByUser(loginName);
+				List<Map<String,Object>> newlist=new ArrayList<Map<String,Object>>();
+				for(EquRecord record:list){
+					Map<String,Object> mapinlist=new HashMap<String,Object>();
+					mapinlist.put("recordId",record.getRecordId());
+					mapinlist.put("equId",record.getEquId());
+					mapinlist.put("equName", record.getEquipment().getEquName());
+					mapinlist.put("version", record.getEquipment().getVersion());
+					mapinlist.put("state",record.getState());
+					mapinlist.put("date", record.getDate());
+					mapinlist.put("loginName",record.getLoginName());
+					mapinlist.put("userName",record.getUser().getUserName());
+					mapinlist.put("remark", record.getRemark());
+					mapinlist.put("registrar", record.getRegistrar());
+					newlist.add(mapinlist);
+				}
+				map.put("data", newlist);
+				map.put("success", "true");
+				map.put("err_code", "0");
+				map.put("message", "ok");
+			}
 		}
+		
 		String json = JSONObject.fromObject(map).toString();
-	
+		System.out.println("getRecordByUser:"+map.toString());
+		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
