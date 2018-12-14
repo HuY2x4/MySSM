@@ -22,8 +22,8 @@
  	   <input type="submit">
 	</form>
 	<!--接收-->
-	<!--  <img src="image/1.png" width=100 height=100/>-->
-	<img src="http://120.79.32.211:8080/KCGL810/static/images/1540465834230.png" width=100 height=100/> 
+<!-- 	 <img src="image/1.png" width=100 height=100/> -->
+	<img src="http://120.79.32.211:8080/KCGL810/static/image/1.png" width=100 height=100/> 
 	
 </body>
 </html>

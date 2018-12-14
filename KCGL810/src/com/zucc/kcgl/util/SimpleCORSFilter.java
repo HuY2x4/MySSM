@@ -25,12 +25,17 @@ public class SimpleCORSFilter implements Filter{
     		// place your code here
     	HttpServletRequest req = (HttpServletRequest) request;
     	HttpServletResponse resp = (HttpServletResponse) response;
-    	// 指定允许其他域名访问
-    	resp.setHeader("Access-Control-Allow-Origin", "*");
-    	// 响应类型
+    	String origin = ((HttpServletRequest) request).getHeader("Origin");
+	    if(origin == null) {
+	        origin = ((HttpServletRequest) request).getHeader("Referer");
+	    }
+    	// 鎸囧畾鍏佽鍏朵粬鍩熷悕璁块棶
+    	resp.setHeader("Access-Control-Allow-Origin", origin);
+    	// 鍝嶅簲绫诲瀷
     	resp.setHeader("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS, DELETE");
-    	// 响应头设置
-    	resp.setHeader("Access-Control-Allow-Headers", "Content-Type, x-requested-with, X-Custom-Header, HaiYi-Access-Token");
+    	// 鍝嶅簲澶磋缃�
+    	resp.setHeader("Access-Control-Allow-Headers", "Content-Type, x-requested-with, X-Custom-Header, HaiYi-Access-Token,X-Access-Token");
+    	resp.setHeader("Access-Control-Allow-Credentials", "true");//, 
     	if ("OPTIONS".equals(req.getMethod())){
     			resp.setStatus(resp.SC_NO_CONTENT);
     	}

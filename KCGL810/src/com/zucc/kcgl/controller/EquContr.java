@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.zucc.kcgl.model.Equipment;
 import com.zucc.kcgl.service.EquService;
+import com.zucc.kcgl.service.UserService;
 import com.zucc.kcgl.util.PhotoUtil;
 import com.zucc.kcgl.util.UtilsC;
 import com.zucc.kcgl.util.getImgBase64;
@@ -34,6 +35,8 @@ public class EquContr {
 
 	@Resource
 	private EquService equService;
+	@Resource
+	private UserService userService;
 	
 	@RequestMapping("/EquipmentList")
 	public String EquipmentList(){  
@@ -49,7 +52,13 @@ public class EquContr {
 	public  @ResponseBody  String addEqu( @RequestBody Equipment equipment,@RequestParam("imagePath") MultipartFile file
 			,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
 		Map<Object,Object> map = new HashMap<>();  
-		if(equipment==null||file==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(equipment==null||file==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -75,7 +84,12 @@ public class EquContr {
 		}
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("addEqu:"+map.toString());
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -95,7 +109,13 @@ public class EquContr {
 		Map<Object,Object> map = new HashMap<>();  
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
-		if(equId==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(equId==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -114,7 +134,12 @@ public class EquContr {
 		}
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("deleteEqu:"+map.toString());
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -129,7 +154,13 @@ public class EquContr {
 	@RequestMapping(value = "/updateEqu", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
 	public  @ResponseBody  String updateEqu(@RequestBody Equipment equipment,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
 		Map<Object,Object> map = new HashMap<>(); 
-		if(equipment==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(equipment==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -162,7 +193,12 @@ public class EquContr {
 		
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("updateEqu:"+map.toString());
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -177,7 +213,13 @@ public class EquContr {
 		Map<Object,Object> map = new HashMap<>(); 
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
-		if(file==null||equId==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(file==null||equId==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -188,7 +230,7 @@ public class EquContr {
 			if(equipment==null){
 				map.put("success", "false");
 				map.put("err_code", "404");
-				map.put("message", "设备不存在");
+				map.put("message", "更新设备图片失败");
 			}
 			else{
 				equipment.setImg(PhotoUtil.saveFile(file,request));
@@ -200,7 +242,7 @@ public class EquContr {
 				else{
 					map.put("success", "false");
 					map.put("err_code", "500");
-					map.put("message", "更新设备图片失败");
+					map.put("message", "添加设备失败");
 				}
 				
 			}
@@ -208,7 +250,12 @@ public class EquContr {
 		}
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("updateEquImg:"+map.toString());
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -227,7 +274,13 @@ public class EquContr {
 		Map<Object,Object> data = new HashMap<>();  
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
-		if(equId==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(equId==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -265,7 +318,12 @@ public class EquContr {
 		
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("getEqu:"+map.toString());
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -282,10 +340,16 @@ public class EquContr {
 
 		List<Equipment> list=new ArrayList<Equipment>();
 		list=equService.getAllEqu();
-		if(list==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(list==null){
 			map.put("success", "false");
 			map.put("err_code", "404");
-			map.put("message", "查找失败");
+			map.put("message", "传入的信息为空");
 		}
 		else{
 			for(Equipment equ:list){
@@ -300,7 +364,12 @@ public class EquContr {
 		
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("getAllEquBaseInf:data");
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -328,10 +397,16 @@ public class EquContr {
 		System.out.println("parms:"+parms.toString());
 		System.out.println("type:"+type);
 
-		if(currentPage==null||pageSize==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(currentPage==null||pageSize==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
-			map.put("message", "currentPage或pageSize为空");
+			map.put("message", "currentPage为空或ageSize为空");
 		}
 		else{
 			list=equService.getPageEquSort(Integer.parseInt(currentPage),Integer.parseInt(pageSize), type, state,equName);
@@ -347,7 +422,12 @@ public class EquContr {
 		
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("getAllEquBaseInfBySort:data");
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -369,7 +449,12 @@ public class EquContr {
 			map.put("message", "ok");
 			String json = JSONObject.fromObject(map).toString();
 			System.out.println("getEquCount:"+map.toString());
-			response.setHeader("Access-Control-Allow-Origin", "*");
+			String origin = request.getHeader("Origin");
+		    if(origin == null) {
+		        origin = request.getHeader("Referer");
+		    }
+		    response.setHeader("Access-Control-Allow-Origin", origin);
+			response.setHeader("Access-Control-Allow-Credentials", "true");
 			response.setCharacterEncoding("UTF-8");
 			response.flushBuffer();
 			response.getWriter().write(json);

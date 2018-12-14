@@ -14,10 +14,9 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <script type="text/javascript">
 
 		function login() {
-			
+			alert("<%=basePath%>");
 			var bao = {
-					"loginName":"hyxzucc",
-					"password":"123456",
+						
 						
 		        };
 		
@@ -26,7 +25,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		   	    data: bao,
 		        type: "POST",//方法类型
 		        dataType: "json",//预期服务器返回的数据类型    //有text 和json两种类型，一个是从后端返回String类型  一个是从后端返回json类型
-		        url: "<%=basePath%>login" , 
+		        url: "<%=basePath%>HasExpired" , 
 		        beforeSend: function (xhr) {  
 		            xhr.setRequestHeader("Access-Control-Request-Method", "POST");  
 		            xhr.setRequestHeader("Access-Control-Request-Headers", "content-type");  
@@ -36,7 +35,6 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		        contentType:"application/x-www-form-urlencoded; charset=utf-8",
 		        success: function (data) {   //result就是返回的String或json
 		        	alert(data); 
-		        
 		        },
 		        error : function() {
 		            alert("错的");
@@ -191,9 +189,10 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
         }
         
         function test7() {
-        	
+        	var code=$("#code").val()
         	var bao = {
-        			
+        			"equId" : "2",
+        			"remark" : "无",
 
                 };
      
@@ -202,7 +201,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
            	    data: bao,
                 type: "POST",//方法类型
                 dataType: "text",//预期服务器返回的数据类型    //有text 和json两种类型，一个是从后端返回String类型  一个是从后端返回json类型
-                url: "<%=basePath%>hasExpired" , 
+                url: "<%=basePath%>inEqu" , 
                 contentType:"application/x-www-form-urlencoded; charset=utf-8",
                 success: function (data) {   //result就是返回的String或json
                 	alert(data); 
@@ -213,9 +212,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
                 }
             });
         }
-        function Location() { 
-            window.location.href = "http://120.79.32.211:8080/KCGL810/test3"; 
-      } 
+        
         
     </script>
 <title>Insert title here</title>
@@ -232,7 +229,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     <p><input type="button" value="根据设备查记录" onclick="test4()"></p>
     <p><input type="button" value="根据用户查记录" onclick="test5()"></p>
     <p><input type="button" value="出库" onclick="test6()"></p> 
-    <p><input type="button" value="跳转" onclick="Location()"></p>
+    <p><input type="button" value="入库" onclick="test7()"></p>
     <p><img alt="" src="" id="img"></p>
     
 </body>

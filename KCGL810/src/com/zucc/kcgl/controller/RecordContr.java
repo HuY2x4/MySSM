@@ -9,7 +9,6 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 
@@ -43,7 +42,13 @@ public class RecordContr {
 		List<EquRecord> list=new ArrayList<EquRecord>();
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
-		if(equId==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(equId==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -83,7 +88,12 @@ public class RecordContr {
 		
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("getRecordByEqu:"+map.toString());
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -99,30 +109,20 @@ public class RecordContr {
 		List<EquRecord> list=new ArrayList<EquRecord>();
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String loginName=UtilsC.hasKeyOfMap("loginName", jsonObject);
-		if(loginName==null||loginName.equals("")){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(loginName==null||loginName.equals("")){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
 		}
 		else{
 			if(loginName.equals("currentUser")){
-				HttpSession session = request.getSession(false);
-				if(session.getAttribute("loginName")==null){
-					map.put("success", "false");
-					map.put("err_code", "401");
-					map.put("message", "身份过期");
-					String json = JSONObject.fromObject(map).toString();
-					response.setHeader("Access-Control-Allow-Origin", "*");
-					response.setCharacterEncoding("UTF-8");
-					response.flushBuffer();
-					response.getWriter().write(json);
-					response.getWriter().flush();  
-					response.getWriter().close();
-					return null;
-				}
-				else{
-					loginName=(String)session.getAttribute("loginName");
-				}
+				loginName = userService.getLoginNameByKey(Token);
 			}
 			
 			if(!userService.hasLoginNameRepeat(loginName)){
@@ -156,7 +156,12 @@ public class RecordContr {
 		
 		String json = JSONObject.fromObject(map).toString();
 		System.out.println("getRecordByUser:"+map.toString());
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);

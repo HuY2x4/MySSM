@@ -1,2 +1,5 @@
 eclipse.preferences.version=1
+encoding//src/com/zucc/kcgl/controller/AdminContr.java=UTF-8
 encoding//src/com/zucc/kcgl/controller/UserContr.java=UTF-8
+encoding//src/com/zucc/kcgl/service/impl/UserServiceImpl.java=UTF-8
+encoding//src/com/zucc/kcgl/util/SimpleCORSFilter.java=UTF-8

@@ -1,5 +1,10 @@
 package com.zucc.kcgl.service.impl;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Service;
@@ -17,11 +22,11 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public boolean addUser(User user) {
 		// TODO Auto-generated method stub
-		/*这里有个事物提交的问题还要去研究,在外面
+		/*杩欓噷鏈変釜浜嬬墿鎻愪氦鐨勯棶棰樿繕瑕佸幓鐮旂┒,鍦ㄥ闈�
 		 * 
 		 * */
-//		System.out.println("【执行中】UserServiceImpl：saveUser");
-		if(userMapper.addUser(user)==0){//添加用户
+//		System.out.println("銆愭墽琛屼腑銆慤serServiceImpl锛歴aveUser");
+		if(userMapper.addUser(user)==0){//娣诲姞鐢ㄦ埛
 			return false;
 		};
 		
@@ -31,7 +36,7 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public boolean deleteUser(String loginName) {
 		// TODO Auto-generated method stub
-		if(userMapper.deleteUser(loginName)==0){//删除用户
+		if(userMapper.deleteUser(loginName)==0){//鍒犻櫎鐢ㄦ埛
 			return false;
 		};
 	
@@ -88,8 +93,60 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public User getUserAllInf(String loginName) {
 		// TODO Auto-generated method stub
+		User user=userMapper.getUserInfByloginName(loginName);
+		if(user.getUserSchoolId()==null||user.getUserSchoolId().equals("")){
+			return userMapper.getUserAllInfNoBD(loginName);
+		}
 		
 		return userMapper.getUserAllInf(loginName);
+	}
+
+	@Override
+	public boolean updAccessKey(String accesskey, String loginName,String time) {
+		// TODO Auto-generated method stub
+		Map<String,Object> map = new HashMap<String,Object>();
+		map.put("accesskey", accesskey);
+		map.put("loginName", loginName);
+		map.put("validtime", time);
+		userMapper.updAccessKey(map);
+		
+		return true;
+	}
+
+	@Override
+	public boolean hasExpires(String accesskey) {
+		// TODO Auto-generated method stub
+		try {
+			String datesql = userMapper.getAccessKey(accesskey);
+			if(datesql==null||datesql.equals("")){
+				return true;
+			}
+			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			Long timesql = df.parse(datesql).getTime();
+		
+		
+			Long time = System.currentTimeMillis();
+			time -=6*60*1000*60;
+			
+			if(time>timesql){
+				return true;
+			}
+		
+		
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return false;
+	}
+
+	@Override
+	public String getLoginNameByKey(String accesskey) {
+		// TODO Auto-generated method stub
+
+		return userMapper.getLoginNameByKey(accesskey);
 	}
 
 	

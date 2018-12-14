@@ -9,7 +9,6 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 
@@ -41,7 +40,14 @@ public class SuAplContr {
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String code=UtilsC.hasKeyOfMap("code", jsonObject);
 		SucApplication suApl=new SucApplication();
-		if(code==null||code.equals("")){
+		
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(code==null||code.equals("")){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -71,7 +77,12 @@ public class SuAplContr {
 		
 		System.out.println("getSuApl:"+map.toString());
 		String json = JSONObject.fromObject(map).toString();
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -87,30 +98,15 @@ public class SuAplContr {
 		List<SucApplication> data=new ArrayList<SucApplication>();
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String loginName=UtilsC.hasKeyOfMap("loginName", jsonObject);
-		HttpSession session = request.getSession(false);
-		if(loginName==null||loginName.equals("")){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
 			map.put("success", "false");
-			map.put("err_code", "400");
-			map.put("message", "传入的信息为空");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
 		}
-		else{
+	    else{
 			if(loginName.equals("currentUser")){
-				if(session.getAttribute("loginName")==null){
-					map.put("success", "false");
-					map.put("err_code", "401");
-					map.put("message", "身份过期");
-					String json = JSONObject.fromObject(map).toString();
-					response.setHeader("Access-Control-Allow-Origin", "*");
-					response.setCharacterEncoding("UTF-8");
-					response.flushBuffer();
-					response.getWriter().write(json);
-					response.getWriter().flush();  
-					response.getWriter().close();
-					return null;
-				}
-				else{
-					loginName=(String)session.getAttribute("loginName");
-				}
+				loginName = userService.getLoginNameByKey(Token);
 				
 			}
 			if(!userService.hasLoginNameRepeat(loginName)){ 
@@ -136,7 +132,7 @@ public class SuAplContr {
 				if(newlist==null){
 					map.put("success", "false");
 					map.put("err_code", "404");
-					map.put("message", "暂无记录");
+					map.put("message", "没有成功的申请");
 				}
 				else{
 					map.put("data", newlist);
@@ -151,7 +147,12 @@ public class SuAplContr {
 		
 		System.out.println("getAllSuApl:"+map.toString());
 		String json = JSONObject.fromObject(map).toString();
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);

@@ -19,5 +19,11 @@ public interface UserService {
 	public boolean hasLoginNameRepeat(String loginName);
 	
 	public int getUserCount();
+	
+	public boolean updAccessKey(String accesskey,String loginName,String time);
+	
+	public boolean hasExpires(String accesskey);
+	
+	public String getLoginNameByKey(String accesskey);
 
 }

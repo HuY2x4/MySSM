@@ -12,7 +12,6 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 
@@ -30,6 +29,7 @@ import com.zucc.kcgl.service.AplService;
 import com.zucc.kcgl.service.EquService;
 import com.zucc.kcgl.service.RecordService;
 import com.zucc.kcgl.service.SuAplService;
+import com.zucc.kcgl.service.UserService;
 import com.zucc.kcgl.util.UtilsC;
 
 @Controller
@@ -42,6 +42,8 @@ public class AdminContr {
 	private AplService aplService;
 	@Resource
 	private SuAplService suAplService;
+	@Resource
+	private UserService userService;
 	
 	@RequestMapping("/adminAddEqu")
 	public String adminAddEqu(){  
@@ -91,7 +93,13 @@ public class AdminContr {
 		String code=UtilsC.hasKeyOfMap("code", jsonObject);
 		
 		
-		if(code==null||code.equals("")){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(code==null||code.equals("")){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
@@ -117,7 +125,12 @@ public class AdminContr {
 		}
 		System.out.println("outEqu:"+map.toString());
 		String json = JSONObject.fromObject(map).toString();
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -131,30 +144,23 @@ public class AdminContr {
 	@RequestMapping(value = "/inEqu", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
 	public  @ResponseBody  String inEqu(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
 		Map<Object,Object> map = new HashMap<>();  
-		HttpSession session = request.getSession(false);
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String equId=UtilsC.hasKeyOfMap("equId", jsonObject);
 		String remark=UtilsC.hasKeyOfMap("remark", jsonObject);
 		
-		if(equId==null||remark==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(equId==null||remark==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
 		}
 		else{
-			if(session.getAttribute("loginName")==null){
-				map.put("success", "false");
-				map.put("err_code", "401");
-				map.put("message", "身份过期需要重新登录");
-				String json = JSONObject.fromObject(map).toString();
-				response.setHeader("Access-Control-Allow-Origin", "*");
-				response.setCharacterEncoding("UTF-8");
-				response.flushBuffer();
-				response.getWriter().write(json);
-				response.getWriter().flush();  
-				response.getWriter().close();
-				return null;
-			}
+			
 			Equipment hasEqu=new Equipment();
 			hasEqu =equService.getEqu(Integer.parseInt(equId));
 			if(hasEqu==null){
@@ -162,7 +168,12 @@ public class AdminContr {
 				map.put("err_code", "404");
 				map.put("message", "设备不存在");
 				String json = JSONObject.fromObject(map).toString();
-				response.setHeader("Access-Control-Allow-Origin", "*");
+				String origin = request.getHeader("Origin");
+			    if(origin == null) {
+			        origin = request.getHeader("Referer");
+			    }
+			    response.setHeader("Access-Control-Allow-Origin", origin);
+				response.setHeader("Access-Control-Allow-Credentials", "true");
 				response.setCharacterEncoding("UTF-8");
 				response.flushBuffer();
 				response.getWriter().write(json);
@@ -171,13 +182,18 @@ public class AdminContr {
 				return null;
 			}
 			SucApplication sucapl=new SucApplication();
-			sucapl=suAplService.getSuAplByEquAndIn(Integer.parseInt(equId));//在成功申请的记录中根据设备ID找记录
+			sucapl=suAplService.getSuAplByEquAndIn(Integer.parseInt(equId));//鍦ㄦ垚鍔熺敵璇风殑璁板綍涓牴鎹澶嘔D鎵捐褰�
 			if(sucapl==null){
 				map.put("success", "false");
 				map.put("err_code", "404");
 				map.put("message", "申请不存在");
 				String json = JSONObject.fromObject(map).toString();
-				response.setHeader("Access-Control-Allow-Origin", "*");
+				String origin = request.getHeader("Origin");
+			    if(origin == null) {
+			        origin = request.getHeader("Referer");
+			    }
+			    response.setHeader("Access-Control-Allow-Origin", origin);
+				response.setHeader("Access-Control-Allow-Credentials", "true");
 				response.setCharacterEncoding("UTF-8");
 				response.flushBuffer();
 				response.getWriter().write(json);
@@ -194,34 +210,34 @@ public class AdminContr {
 	        Equipment equ=new Equipment();
 	        equ=equService.getEqu(Integer.parseInt(equId));
 	        EquRecord rec=new EquRecord();
-	        rec.setRegistrar((String)session.getAttribute("loginName"));
+	        rec.setRegistrar( userService.getLoginNameByKey(Token));
 			rec.setDate(time);
 			rec.setEquId(Integer.parseInt(equId));
 			rec.setRemark(remark);
 			rec.setState("in");
 			
 			List<EquRecord> list=new ArrayList<EquRecord>();
-			list=recService.getRecordByEqu(Integer.parseInt(equId));//添加入库记录
+			list=recService.getRecordByEqu(Integer.parseInt(equId));//娣诲姞鍏ュ簱璁板綍
 			rec.setLoginName(list.get(list.size()-1).getLoginName());
 			recService.addRecord(rec);
 			
 			//equService.updateEquState(equId, "in");
 			equ.setState("in");
 			equ.setInDate(time);
-			equService.updateEqu(equ);//修改设备状态
+			equService.updateEqu(equ);//淇敼璁惧鐘舵��
 	
 			Application aplOrder=new Application();
 			
-			Application apl=aplService.getOrderApl(Integer.parseInt(equId));//获取预约信息根据设备ID
+			Application apl=aplService.getOrderApl(Integer.parseInt(equId));//鑾峰彇棰勭害淇℃伅鏍规嵁璁惧ID
 	
 			if(apl!=null){
 				SucApplication suapl=new SucApplication();
 				suapl.setEquId(apl.getEquId());
 				suapl.setState("in");
 				suapl.setLoginName(apl.getLoginName());
-				suAplService.addSuApl(suapl);//将预约的信息变为成功的信息
+				suAplService.addSuApl(suapl);//灏嗛绾︾殑淇℃伅鍙樹负鎴愬姛鐨勪俊鎭�
 				apl.setOrderState("invalid");
-				aplService.updateApl(apl);//将预约申请失效
+				aplService.updateApl(apl);//灏嗛绾︾敵璇峰け鏁�
 				
 				EquRecord recOrder=new EquRecord();
 				Date dateOrder = new Date();
@@ -229,19 +245,19 @@ public class AdminContr {
 		        String nowTimeOrder = sdfOrder.format(dateOrder);
 		        Date timeOrder = sdf.parse( nowTimeOrder );
 		        
-		        recOrder.setRegistrar((String)session.getAttribute("loginName"));
+		        recOrder.setRegistrar(userService.getLoginNameByKey(Token));
 		        recOrder.setDate(timeOrder);
 		        recOrder.setEquId(apl.getEquId());
 		        recOrder.setRemark("");
 		        recOrder.setState("out");
 		        recOrder.setLoginName(apl.getLoginName());
-				recService.addRecord(recOrder);//添加已出库的设备记录
+				recService.addRecord(recOrder);//娣诲姞宸插嚭搴撶殑璁惧璁板綍
 				
 				Equipment equOrder=new Equipment();
 				equOrder=equService.getEqu(apl.getEquId());
 				equOrder.setOutDate(timeOrder);
 				equOrder.setState("out");
-				equService.updateEqu(equOrder);//修改设备的相关信息
+				equService.updateEqu(equOrder);//淇敼璁惧鐨勭浉鍏充俊鎭�
 			}
 			map.put("success", "true");
 			map.put("err_code", "0");
@@ -249,7 +265,12 @@ public class AdminContr {
 		}
 		System.out.println("inEqu:"+map.toString());
 		String json = JSONObject.fromObject(map).toString();
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);
@@ -265,32 +286,25 @@ public class AdminContr {
 	//String aplId,String state
 	@RequestMapping(value = "/cheakApl", method = RequestMethod.POST,produces = "text/html;charset=UTF-8")
 	public  @ResponseBody  String updateEqu(@RequestBody String parms,HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{
-		Map<Object,Object> map = new HashMap<>();  
+		Map<Object,Object> map = new HashMap<>();
 		JSONObject jsonObject = JSONObject.fromObject(parms);
 		String aplId=UtilsC.hasKeyOfMap("aplId", jsonObject);
 		String state=UtilsC.hasKeyOfMap("state", jsonObject);
 		
 		
-		if(aplId==null||state==null){
+		String Token = request.getHeader("X-Access-Token");
+		if(userService.hasExpires(Token)){
+			map.put("success", "false");
+			map.put("err_code", "401");
+			map.put("message", "身份过期需要重新登录");
+		}
+		else if(aplId==null||state==null){
 			map.put("success", "false");
 			map.put("err_code", "400");
 			map.put("message", "传入的信息为空");
 		}
 		else{
-			HttpSession session = request.getSession(false);
-			if(session.getAttribute("loginName")==null){
-				map.put("success", "false");
-				map.put("err_code", "401");
-				map.put("message", "身份过期需要重新登录");
-				String json = JSONObject.fromObject(map).toString();
-				response.setHeader("Access-Control-Allow-Origin", "*");
-				response.setCharacterEncoding("UTF-8");
-				response.flushBuffer();
-				response.getWriter().write(json);
-				response.getWriter().flush();  
-				response.getWriter().close();
-				return null;
-			}
+			
 	
 			Application apl=new Application();
 			apl=aplService.getApl(Integer.parseInt(aplId));
@@ -301,7 +315,7 @@ public class AdminContr {
 			}
 			else{
 				apl.setState(state);
-				aplService.updateApl(apl);//修改申请表的状态信息
+				aplService.updateApl(apl);//淇敼鐢宠琛ㄧ殑鐘舵�佷俊鎭�
 				
 				if(apl.getMethod().equals("rent")&&state.equals("pass")){
 					EquRecord rec=new EquRecord();
@@ -310,33 +324,33 @@ public class AdminContr {
 			        String nowTime = sdf.format(date);
 			        Date time = sdf.parse( nowTime );
 			        
-			        rec.setRegistrar((String)session.getAttribute("loginName"));
+			        rec.setRegistrar(userService.getLoginNameByKey(Token));
 					rec.setDate(time);
 					rec.setEquId(apl.getEquId());
 					rec.setRemark("");
 					rec.setState("out");
 					rec.setLoginName(apl.getLoginName());
-					recService.addRecord(rec);//添加已出库的设备记录
+					recService.addRecord(rec);//娣诲姞宸插嚭搴撶殑璁惧璁板綍
 					
 					Equipment equ=new Equipment();
 					equ=equService.getEqu(apl.getEquId());
 					equ.setOutDate(time);
 					equ.setState("out");
-					equService.updateEqu(equ);//修改设备的相关信息
+					equService.updateEqu(equ);//淇敼璁惧鐨勭浉鍏充俊鎭�
 					
 					
 					SucApplication suapl=new SucApplication();
 					suapl.setEquId(apl.getEquId());
-					suapl.setState("in");//in表示还在仓库内
+					suapl.setState("in");//in琛ㄧず杩樺湪浠撳簱鍐�
 					suapl.setLoginName(apl.getLoginName());
-					suAplService.addSuApl(suapl);//添加成功申请到的表单
+					suAplService.addSuApl(suapl);//娣诲姞鎴愬姛鐢宠鍒扮殑琛ㄥ崟
 					
 				}
 				else if(apl.getMethod().equals("order")&&state.equals("pass")){
 					Equipment equ=new Equipment();
 					equ=equService.getEqu(apl.getEquId());
 					equ.setState("order");
-					equService.updateEqu(equ);//修改设备的相关信息
+					equService.updateEqu(equ);//淇敼璁惧鐨勭浉鍏充俊鎭�
 				}
 				map.put("success", "true");
 				map.put("err_code", "0");
@@ -349,7 +363,12 @@ public class AdminContr {
 		}
 		System.out.println("cheakApl:"+map.toString());
 		String json = JSONObject.fromObject(map).toString();
-		response.setHeader("Access-Control-Allow-Origin", "*");
+		String origin = request.getHeader("Origin");
+	    if(origin == null) {
+	        origin = request.getHeader("Referer");
+	    }
+	    response.setHeader("Access-Control-Allow-Origin", origin);
+		response.setHeader("Access-Control-Allow-Credentials", "true");
 		response.setCharacterEncoding("UTF-8");
 		response.flushBuffer();
 		response.getWriter().write(json);

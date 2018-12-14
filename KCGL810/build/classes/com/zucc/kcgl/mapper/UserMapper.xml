@@ -23,7 +23,7 @@
 	
 	
 	<select id="getUserInfByloginName" parameterType="String" resultType="com.zucc.kcgl.model.User">
-		select * from user where loginName=#{loginName}
+		select loginName,password,userName,email,userSchoolId,points from user where loginName=#{loginName}
 	</select>
 	
 	
@@ -55,6 +55,26 @@
 	</resultMap>
 	
 	
+	<select id="getUserAllInfNoBD" parameterType="String"  resultMap="userAllInfNoBD" >
+		select um.userId,u.loginName,u.userName,u.password,u.email,u.phone,u.points,u.userSchoolId 
+		from user u,user_mapper um
+		where u.loginName=um.loginName  and u.loginName=#{loginName}
+		
+	</select>
+	<resultMap type="User" id="userAllInfNoBD">
+		<result column="loginName" property="loginName"/>
+		<result column="password" property="password"/>
+		<result column="userName" property="userName"/>
+		<result column="phone" property="phone"/>
+		<result column="email" property="email"/>
+		<result column="userSchoolId" property="userSchoolId"/>
+		<result column="points" property="points"/>
+		<association property="userMapper" javaType="com.zucc.kcgl.model.UserIdMap">
+			<result column="loginName" property="loginName"/>
+			<result column="userId" property="userId"/>
+		</association>
+	</resultMap>
+	
 	
 	
 	<update id="updateUserInf" parameterType="com.zucc.kcgl.model.User">
@@ -81,5 +101,17 @@
 	<select id="getUserCount"  resultType="int">
 		select count(*) from user  
 	</select>
-
+	
+	
+	<update id="updAccessKey" parameterType="Map">
+		update user set accesskey=#{accesskey},validtime=#{validtime}  where loginName=#{loginName}
+	</update>
+	
+	<select id="getAccessKey"  resultType="String">
+		select validtime from user  where accesskey=#{accesskey}
+	</select>
+	
+	<select id="getLoginNameByKey"  resultType="String">
+		select loginName from user  where accesskey=#{accesskey}
+	</select>
 </mapper>
